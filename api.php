@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $failed = [];
         foreach ($recipients as $to) {
-            if (!mail($to, $subject, $message, $headers, '-f simon@madklubben.com')) {
+            if (!mail($to, $subject, $message, $headers)) {
                 $failed[] = $to;
             }
         }
