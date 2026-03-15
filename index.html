@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Madklubben</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +19,6 @@
       --border: #ddd8d0;
       --accent: #111111;
       --accent-dim: #444444;
-      --cream: #111111;
       --muted: #635d57;
       --text: #2a2520;
       --radius: 12px;
@@ -122,7 +122,7 @@
       font-size: clamp(52px, 9vw, 88px);
       font-weight: 700;
       line-height: 1.05;
-      color: var(--cream);
+      color: var(--accent);
       margin-bottom: 14px;
     }
     .hero-sub {
@@ -156,7 +156,7 @@
       border-radius: 8px;
     }
     .next-eyebrow {
-      font-size: 10px;
+      font-size: 12px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--accent);
@@ -165,7 +165,7 @@
     .next-date-text {
       font-family: 'Playfair Display', serif;
       font-size: 22px;
-      color: var(--cream);
+      color: var(--accent);
       margin-bottom: 20px;
       text-transform: capitalize;
     }
@@ -258,7 +258,7 @@
     .s-title {
       font-family: 'Playfair Display', serif;
       font-size: clamp(26px, 4vw, 38px);
-      color: var(--cream);
+      color: var(--accent);
       margin-bottom: 40px;
     }
 
@@ -428,7 +428,7 @@
       cursor: default;
     }
     .chip:hover { border-color: rgba(0,0,0,0.25); color: var(--accent); }
-    .chip.passive { opacity: 0.38; font-style: italic; }
+    .chip.passive { opacity: 0.55; font-style: italic; }
 
     /* ── FOOTER ── */
     footer {
@@ -474,7 +474,7 @@
     .login-box h2 {
       font-family: 'Playfair Display', serif;
       font-size: 22px;
-      color: var(--cream);
+      color: var(--accent);
     }
     .login-close-btn {
       background: none;
@@ -519,6 +519,30 @@
     }
     .btn-gold:hover { opacity: 0.82; }
 
+    /* ── SCROLL INDICATOR ── */
+    .scroll-indicator {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.45;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    .scroll-indicator span {
+      display: block;
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid var(--accent);
+      border-bottom: 2px solid var(--accent);
+      transform: rotate(45deg);
+    }
+    .scroll-indicator span:nth-child(2) { margin-top: -6px; opacity: 0.5; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
       .next-card { padding: 28px 22px; }
@@ -530,6 +554,13 @@
       .dr-badge { display: none; }
       .edit-input[type="date"] { width: 130px; }
       .edit-input[type="text"] { width: 100px; }
+      .dinner-edit-row, .dinner-add-row { flex-direction: column; align-items: stretch; }
+      .dinner-edit-row .edit-input,
+      .dinner-add-row .edit-input { width: 100%; }
+      .dinner-edit-row .edit-save-btn,
+      .dinner-edit-row .edit-cancel-btn,
+      .dinner-add-row .edit-save-btn,
+      .dinner-add-row .edit-cancel-btn { width: 100%; padding: 10px; }
     }
   </style>
 </head>
@@ -587,6 +618,10 @@
       </div>
     </div>
   </div>
+  <div class="scroll-indicator" aria-hidden="true">
+    <span></span>
+    <span></span>
+  </div>
 </div>
 
 <div class="section-divider"></div>
@@ -637,9 +672,9 @@ const DEFAULT_DINNERS = [
   { date: '2025-05-03', chefs: ['Frøding', 'Bisp'],             location: '' },
   { date: '2025-08-23', chefs: ['Cronstjerne', 'Rifsdal'],      location: '' },
   { date: '2025-11-22', chefs: ['Thyregod', 'van der Leeden'],  location: '' },
-  { date: '2026-01-31', chefs: ['Gjelsted', 'Heide'],           location: '' },
-  { date: '2026-04-25', chefs: ['Larsen', 'Frøding'],           location: 'Hartmann' },
-  { date: '2026-08-22', chefs: ['Hartmann', 'Bisp'],            location: '' },
+  { date: '2026-01-31', chefs: ['Gjelsted', 'Hartmann'],         location: '' },
+  { date: '2026-04-25', chefs: ['Larsen', 'Hartmann'],           location: 'Hartmann' },
+  { date: '2026-08-22', chefs: ['Frøding', 'Bisp'],             location: '' },
   { date: '2026-11-21', chefs: ['Mekanikeren', 'Rifsdal'],      location: '' },
   { date: '2027-01-23', chefs: ['Cronstjerne', 'TBD'], location: '' },
   { date: '2027-04-24', chefs: ['Thyregod', 'Gjelsted'],        location: '' },
