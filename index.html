@@ -135,37 +135,40 @@
 
     /* ── NEXT DINNER CARD ── */
     .next-card {
-      background: linear-gradient(160deg, #2c1f14 0%, #3d2a1a 100%);
-      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(ellipse at 25% 15%, rgba(140,180,255,0.13) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 85%, rgba(80,130,220,0.10) 0%, transparent 45%),
+        linear-gradient(160deg, #1b2d45 0%, #1e3554 60%, #162840 100%);
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 20px;
       padding: 40px 48px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+      box-shadow: 0 24px 64px rgba(20,40,80,0.28);
       position: relative;
-      color: #e8dfd0;
+      color: #c8daf0;
     }
     .next-card .next-card-ornament {
-      background: transparent;
-      color: #c9a86c;
+      background: #1b2d45;
+      color: rgba(180,210,255,0.6);
     }
-    .next-card .next-eyebrow { color: #c9a86c; }
-    .next-card .next-date-text { color: #f0e8d8; }
+    .next-card .next-eyebrow { color: rgba(160,200,255,0.65); }
+    .next-card .next-date-text { color: #e8f0fc; }
     .next-card .next-chefs {
-      border-top-color: rgba(255,255,255,0.12);
-      border-bottom-color: rgba(255,255,255,0.12);
+      border-top-color: rgba(255,255,255,0.1);
+      border-bottom-color: rgba(255,255,255,0.1);
     }
-    .next-card .chef-name { color: #f0e8d8; }
-    .next-card .chef-amp { color: #9a8878; }
-    .next-card .cd-num { color: #c9a86c; }
-    .next-card .cd-label { color: #9a8878; }
-    .next-card .cd-sep { color: #9a8878; }
+    .next-card .chef-name { color: #e8f0fc; }
+    .next-card .chef-amp { color: rgba(160,190,230,0.5); }
+    .next-card .cd-num { color: #e8f0fc; }
+    .next-card .cd-label { color: rgba(160,200,255,0.55); }
+    .next-card .cd-sep { color: rgba(160,190,230,0.35); }
     .next-card-ornament {
       position: absolute;
       top: -14px; left: 50%;
       transform: translateX(-50%);
-      background: #2c1f14;
-      color: #c9a86c;
+      background: #1b2d45;
+      color: rgba(180,210,255,0.6);
       padding: 0 14px;
       font-size: 16px;
       letter-spacing: 6px;
