@@ -691,8 +691,15 @@ function formatShort(dateStr) {
 function getNext() {
   return DINNERS.find(d => !isPast(d.date)) || null;
 }
-function saveDinners() {
+async function saveDinners() {
   localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+  try {
+    await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: ADMIN_CODE, dinners: DINNERS })
+    });
+  } catch(e) { /* offline – localStorage er gemt */ }
 }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -858,11 +865,29 @@ document.getElementById('login-modal').addEventListener('click', e => {
 });
 
 // ── INIT ─────────────────────────────────────────────────────────────
+// Render immediately with cached localStorage data, then sync from server
 renderHero();
 renderSchedule();
 renderMembers();
 tick();
 setInterval(tick, 1000);
+
+(async function syncFromServer() {
+  try {
+    const res = await fetch('api.php');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+    DINNERS = data.map(d => ({
+      location: '',
+      ...d,
+      chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
+    }));
+    localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+    renderHero();
+    renderSchedule();
+  } catch(e) { /* server ikke tilgængelig – bruger localStorage */ }
+})();
 </script>
 </body>
 </html>
