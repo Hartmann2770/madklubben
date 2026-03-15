@@ -647,15 +647,19 @@ const DEFAULT_DINNERS = [
   { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'],        location: '' },
 ];
 
-const DATA_VERSION = '2';
-if (localStorage.getItem('mk_data_v') !== DATA_VERSION) {
-  localStorage.removeItem('mk_dinners');
-  localStorage.setItem('mk_data_v', DATA_VERSION);
-}
+// Load saved dinners — never wipe, only fill in missing fields if a new one is added
 let DINNERS = (function() {
   try {
     const saved = localStorage.getItem('mk_dinners');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Soft migration: ensure every entry has all expected fields
+      return parsed.map(d => ({
+        location: '',
+        ...d,
+        chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
+      }));
+    }
   } catch(e) {}
   return DEFAULT_DINNERS.map(d => ({ ...d, chefs: [...d.chefs] }));
 })();
