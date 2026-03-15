@@ -45,8 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        ini_set('sendmail_from', 'simon@madklubben.com');
         $headers  = "From: $from\r\n";
         $headers .= "Reply-To: simon@madklubben.com\r\n";
+        $headers .= "Sender: simon@madklubben.com\r\n";
         $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
 
