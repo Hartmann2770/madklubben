@@ -204,6 +204,23 @@
     }
     .chef-amp { color: var(--muted); font-size: 14px; }
 
+    .next-location {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      margin-top: -12px;
+      letter-spacing: 0.03em;
+    }
+    .next-card .next-location { color: rgba(200,225,255,0.6); }
+    .dr-location {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
     /* ── COUNTDOWN ── */
     .countdown {
       display: flex;
@@ -533,6 +550,7 @@
     <div class="next-card-ornament">★ ★ ★</div>
     <div class="next-eyebrow">Næste madklub</div>
     <div class="next-date-text" id="next-date-text">—</div>
+    <div class="next-location" id="next-location"></div>
     <div class="next-chefs">
       <span class="chef-name" id="chef1">—</span>
       <span class="chef-amp">&amp;</span>
@@ -606,20 +624,25 @@
 <script>
 // ── DATA ────────────────────────────────────────────────────────────
 const DEFAULT_DINNERS = [
-  { date: '2025-01-25', chefs: ['Hartmann', 'Heide'] },
-  { date: '2025-05-03', chefs: ['Frøding', 'Bisp'] },
-  { date: '2025-08-23', chefs: ['Cronstjerne', 'Rifsdal'] },
-  { date: '2025-11-22', chefs: ['Thyregod', 'van der Leeden'] },
-  { date: '2026-01-31', chefs: ['Gjelsted', 'Heide'] },
-  { date: '2026-04-25', chefs: ['Larsen', 'Frøding'] },
-  { date: '2026-08-22', chefs: ['Hartmann', 'Bisp'] },
-  { date: '2026-11-21', chefs: ['Mekanikeren', 'Rifsdal'] },
-  { date: '2027-01-23', chefs: ['Cronstjerne', 'van der Leeden'] },
-  { date: '2027-04-24', chefs: ['Thyregod', 'Gjelsted'] },
-  { date: '2027-08-21', chefs: ['Larsen', 'Hartmann'] },
-  { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'] },
+  { date: '2025-01-25', chefs: ['Hartmann', 'Heide'],           location: '' },
+  { date: '2025-05-03', chefs: ['Frøding', 'Bisp'],             location: '' },
+  { date: '2025-08-23', chefs: ['Cronstjerne', 'Rifsdal'],      location: '' },
+  { date: '2025-11-22', chefs: ['Thyregod', 'van der Leeden'],  location: '' },
+  { date: '2026-01-31', chefs: ['Gjelsted', 'Heide'],           location: '' },
+  { date: '2026-04-25', chefs: ['Larsen', 'Frøding'],           location: 'Hartmann' },
+  { date: '2026-08-22', chefs: ['Hartmann', 'Bisp'],            location: '' },
+  { date: '2026-11-21', chefs: ['Mekanikeren', 'Rifsdal'],      location: '' },
+  { date: '2027-01-23', chefs: ['Cronstjerne', 'van der Leeden'], location: '' },
+  { date: '2027-04-24', chefs: ['Thyregod', 'Gjelsted'],        location: '' },
+  { date: '2027-08-21', chefs: ['Larsen', 'Hartmann'],          location: '' },
+  { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'],        location: '' },
 ];
 
+const DATA_VERSION = '2';
+if (localStorage.getItem('mk_data_v') !== DATA_VERSION) {
+  localStorage.removeItem('mk_dinners');
+  localStorage.setItem('mk_data_v', DATA_VERSION);
+}
 let DINNERS = (function() {
   try {
     const saved = localStorage.getItem('mk_dinners');
@@ -668,6 +691,8 @@ function renderHero() {
   document.getElementById('next-date-text').textContent = formatLong(next.date);
   document.getElementById('chef1').textContent = next.chefs[0];
   document.getElementById('chef2').textContent = next.chefs[1];
+  const locEl = document.getElementById('next-location');
+  locEl.textContent = next.location ? '🏠 Hos ' + next.location : '';
 }
 
 // ── COUNTDOWN ────────────────────────────────────────────────────────
@@ -705,6 +730,7 @@ function renderSchedule() {
           <input class="edit-input" type="date" id="edit-date-${idx}" value="${esc(d.date)}">
           <input class="edit-input" type="text" id="edit-chef1-${idx}" value="${esc(d.chefs[0])}" placeholder="Kok 1">
           <input class="edit-input" type="text" id="edit-chef2-${idx}" value="${esc(d.chefs[1])}" placeholder="Kok 2">
+          <input class="edit-input" type="text" id="edit-loc-${idx}" value="${esc(d.location||'')}" placeholder="Vært (navn)">
           <button class="edit-save-btn" onclick="saveDinnerEdit(${idx})">Gem</button>
           <button class="edit-cancel-btn" onclick="cancelEdit()">✕</button>
         </div>`;
@@ -716,6 +742,7 @@ function renderSchedule() {
             <span class="dr-amp">&amp;</span>
             <span class="dr-chef">${esc(d.chefs[1])}</span>
           </div>
+          ${d.location ? `<span class="dr-location">🏠 ${esc(d.location)}</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>`;
@@ -735,11 +762,12 @@ function cancelEdit() {
   renderSchedule();
 }
 function saveDinnerEdit(idx) {
-  const date  = document.getElementById(`edit-date-${idx}`).value;
-  const chef1 = document.getElementById(`edit-chef1-${idx}`).value.trim();
-  const chef2 = document.getElementById(`edit-chef2-${idx}`).value.trim();
+  const date     = document.getElementById(`edit-date-${idx}`).value;
+  const chef1    = document.getElementById(`edit-chef1-${idx}`).value.trim();
+  const chef2    = document.getElementById(`edit-chef2-${idx}`).value.trim();
+  const location = document.getElementById(`edit-loc-${idx}`).value.trim();
   if (!date || !chef1 || !chef2) return;
-  DINNERS[idx] = { date, chefs: [chef1, chef2] };
+  DINNERS[idx] = { date, chefs: [chef1, chef2], location };
   saveDinners();
   editingIndex = -1;
   renderHero();
