@@ -12,15 +12,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #080808;
-      --surface: #111111;
-      --surface-raised: #1a1a1a;
-      --border: #2a2a2a;
-      --accent: #ffffff;
-      --accent-dim: #aaaaaa;
-      --cream: #f0f0f0;
-      --muted: #666666;
-      --text: #e8e8e8;
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-raised: #f0f0ee;
+      --border: #e0e0dc;
+      --accent: #111111;
+      --accent-dim: #555555;
+      --cream: #1a1a1a;
+      --muted: #888888;
+      --text: #2a2a2a;
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -41,10 +41,10 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       padding-top: env(safe-area-inset-top);
-      background: rgba(8,8,8,0.92);
+      background: rgba(247,247,245,0.92);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
     .nav-inner {
       max-width: 900px;
@@ -64,7 +64,6 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      filter: invert(1);
       opacity: 0.9;
     }
     .nav-logo-text {
@@ -85,7 +84,7 @@
     .nav-links a:hover { color: var(--accent); }
     #login-btn {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(0,0,0,0.15);
       color: var(--muted);
       padding: 6px 14px;
       border-radius: 20px;
@@ -108,8 +107,8 @@
       text-align: center;
       padding: calc(100px + env(safe-area-inset-top)) 24px 60px;
       background:
-        radial-gradient(ellipse at 50% 10%, rgba(255,255,255,0.03) 0%, transparent 55%),
-        radial-gradient(ellipse at 15% 85%, rgba(255,255,255,0.02) 0%, transparent 45%);
+        radial-gradient(ellipse at 50% 10%, rgba(0,0,0,0.02) 0%, transparent 55%),
+        radial-gradient(ellipse at 15% 85%, rgba(0,0,0,0.015) 0%, transparent 45%);
     }
     .hero-eyebrow {
       font-size: 11px;
@@ -137,12 +136,12 @@
     /* ── NEXT DINNER CARD ── */
     .next-card {
       background: var(--surface);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(0,0,0,0.12);
       border-radius: 20px;
       padding: 40px 48px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.1);
       position: relative;
     }
     .next-card-ornament {
@@ -269,7 +268,7 @@
     .dinner-row.past { opacity: 0.3; }
     .dinner-row.is-next {
       background: var(--surface);
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(0,0,0,0.12);
     }
     .dr-date {
       width: 76px;
@@ -296,10 +295,70 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--accent);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.12);
       padding: 3px 9px;
       border-radius: 10px;
+    }
+
+    /* ── ADMIN EDIT ── */
+    .edit-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 2px 6px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .dinner-row:hover .edit-btn { opacity: 1; }
+    .dinner-edit-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin: 2px 0;
+    }
+    .edit-input {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .edit-input:focus { border-color: var(--accent); }
+    .edit-input[type="date"] { width: 140px; }
+    .edit-input[type="text"] { width: 120px; }
+    .edit-save-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      font-size: 13px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+    }
+    .edit-cancel-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
     }
 
     /* ── MEMBERS ── */
@@ -323,7 +382,7 @@
       transition: border-color 0.2s, color 0.2s;
       cursor: default;
     }
-    .chip:hover { border-color: rgba(255,255,255,0.18); color: var(--accent); }
+    .chip:hover { border-color: rgba(0,0,0,0.25); color: var(--accent); }
     .chip.passive { opacity: 0.38; font-style: italic; }
 
     /* ── FOOTER ── */
@@ -348,7 +407,7 @@
       position: fixed;
       inset: 0;
       z-index: 300;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.45);
       align-items: center;
       justify-content: center;
     }
@@ -359,7 +418,7 @@
       padding: 36px 32px;
       max-width: 340px;
       width: 90%;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.15);
     }
     .login-header {
       display: flex;
@@ -397,12 +456,12 @@
       transition: border-color 0.2s;
     }
     .login-box input:focus { border-color: var(--accent); }
-    .login-error { display: none; color: #e07878; font-size: 13px; margin-bottom: 10px; }
+    .login-error { display: none; color: #c0392b; font-size: 13px; margin-bottom: 10px; }
     .btn-gold {
       width: 100%;
       padding: 13px;
-      background: #ffffff;
-      color: #080808;
+      background: #111111;
+      color: #ffffff;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       font-weight: 600;
@@ -413,7 +472,7 @@
       transition: opacity 0.2s;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-gold:hover { opacity: 0.88; }
+    .btn-gold:hover { opacity: 0.82; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
@@ -424,6 +483,8 @@
       .cd-unit { min-width: 48px; }
       .nav-links a:not(button) { display: none; }
       .dr-badge { display: none; }
+      .edit-input[type="date"] { width: 130px; }
+      .edit-input[type="text"] { width: 100px; }
     }
   </style>
 </head>
@@ -447,7 +508,7 @@
 <div class="hero">
   <div class="hero-eyebrow">Venner &middot; Mad &middot; Vin</div>
   <h1 class="hero-title">Madklubben</h1>
-  <p class="hero-sub">Mad er kærlighed</p>
+  <p class="hero-sub"><em>man skulle have været der...</em></p>
 
   <div class="next-card">
     <div class="next-card-ornament">✦ ✦ ✦</div>
@@ -525,7 +586,7 @@
 
 <script>
 // ── DATA ────────────────────────────────────────────────────────────
-const DINNERS = [
+const DEFAULT_DINNERS = [
   { date: '2025-01-25', chefs: ['Hartmann', 'Heide'] },
   { date: '2025-05-03', chefs: ['Frøding', 'Bisp'] },
   { date: '2025-08-23', chefs: ['Cronstjerne', 'Rifsdal'] },
@@ -540,6 +601,14 @@ const DINNERS = [
   { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'] },
 ];
 
+let DINNERS = (function() {
+  try {
+    const saved = localStorage.getItem('mk_dinners');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return DEFAULT_DINNERS.map(d => ({ ...d, chefs: [...d.chefs] }));
+})();
+
 const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','van der Leeden','Thyregod',
                          'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 const PASSIVE_MEMBERS = ['Jahnsen'];
@@ -547,6 +616,7 @@ const ADMIN_CODE = 'TMK04';
 
 // ── STATE ────────────────────────────────────────────────────────────
 let isAdmin = false;
+let editingIndex = -1;
 
 // ── HELPERS ──────────────────────────────────────────────────────────
 function isPast(dateStr) {
@@ -564,6 +634,12 @@ function formatShort(dateStr) {
 }
 function getNext() {
   return DINNERS.find(d => !isPast(d.date)) || null;
+}
+function saveDinners() {
+  localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── HERO ─────────────────────────────────────────────────────────────
@@ -594,29 +670,61 @@ function tick() {
 function renderSchedule() {
   const next = getNext();
   const byYear = {};
-  for (const d of DINNERS) {
+  DINNERS.forEach((d, idx) => {
     const y = d.date.slice(0, 4);
-    (byYear[y] = byYear[y] || []).push(d);
-  }
+    (byYear[y] = byYear[y] || []).push({ ...d, _idx: idx });
+  });
   let html = '';
   for (const [year, list] of Object.entries(byYear)) {
     html += `<div class="year-block"><div class="year-heading">${year}</div>`;
     for (const d of list) {
       const past  = isPast(d.date);
       const isNxt = next && d.date === next.date;
-      html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
-        <div class="dr-date">${formatShort(d.date)}</div>
-        <div class="dr-chefs">
-          <span class="dr-chef">${d.chefs[0]}</span>
-          <span class="dr-amp">&amp;</span>
-          <span class="dr-chef">${d.chefs[1]}</span>
-        </div>
-        ${isNxt ? '<span class="dr-badge">Næste</span>' : ''}
-      </div>`;
+      const idx   = d._idx;
+      if (isAdmin && editingIndex === idx) {
+        html += `<div class="dinner-edit-row">
+          <input class="edit-input" type="date" id="edit-date-${idx}" value="${esc(d.date)}">
+          <input class="edit-input" type="text" id="edit-chef1-${idx}" value="${esc(d.chefs[0])}" placeholder="Kok 1">
+          <input class="edit-input" type="text" id="edit-chef2-${idx}" value="${esc(d.chefs[1])}" placeholder="Kok 2">
+          <button class="edit-save-btn" onclick="saveDinnerEdit(${idx})">Gem</button>
+          <button class="edit-cancel-btn" onclick="cancelEdit()">✕</button>
+        </div>`;
+      } else {
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
+          <div class="dr-date">${formatShort(d.date)}</div>
+          <div class="dr-chefs">
+            <span class="dr-chef">${esc(d.chefs[0])}</span>
+            <span class="dr-amp">&amp;</span>
+            <span class="dr-chef">${esc(d.chefs[1])}</span>
+          </div>
+          ${isNxt ? '<span class="dr-badge">Næste</span>' : ''}
+          ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
+        </div>`;
+      }
     }
     html += `</div>`;
   }
   document.getElementById('schedule').innerHTML = html;
+}
+
+function startEdit(idx) {
+  editingIndex = idx;
+  renderSchedule();
+}
+function cancelEdit() {
+  editingIndex = -1;
+  renderSchedule();
+}
+function saveDinnerEdit(idx) {
+  const date  = document.getElementById(`edit-date-${idx}`).value;
+  const chef1 = document.getElementById(`edit-chef1-${idx}`).value.trim();
+  const chef2 = document.getElementById(`edit-chef2-${idx}`).value.trim();
+  if (!date || !chef1 || !chef2) return;
+  DINNERS[idx] = { date, chefs: [chef1, chef2] };
+  saveDinners();
+  editingIndex = -1;
+  renderHero();
+  renderSchedule();
 }
 
 // ── MEMBERS ──────────────────────────────────────────────────────────
@@ -629,7 +737,7 @@ function renderMembers() {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
 function openLogin() {
-  if (isAdmin) { isAdmin = false; updateLoginBtn(); return; }
+  if (isAdmin) { isAdmin = false; editingIndex = -1; updateLoginBtn(); renderSchedule(); return; }
   document.getElementById('login-error').style.display = 'none';
   document.getElementById('login-input').value = '';
   document.getElementById('login-modal').style.display = 'flex';
@@ -643,6 +751,7 @@ function submitLogin() {
     isAdmin = true;
     closeLogin();
     updateLoginBtn();
+    renderSchedule();
   } else {
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('login-input').select();
