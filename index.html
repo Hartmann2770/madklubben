@@ -641,7 +641,7 @@ const DEFAULT_DINNERS = [
   { date: '2026-04-25', chefs: ['Larsen', 'Frøding'],           location: 'Hartmann' },
   { date: '2026-08-22', chefs: ['Hartmann', 'Bisp'],            location: '' },
   { date: '2026-11-21', chefs: ['Mekanikeren', 'Rifsdal'],      location: '' },
-  { date: '2027-01-23', chefs: ['Cronstjerne', 'van der Leeden'], location: '' },
+  { date: '2027-01-23', chefs: ['Cronstjerne', 'TBD'], location: '' },
   { date: '2027-04-24', chefs: ['Thyregod', 'Gjelsted'],        location: '' },
   { date: '2027-08-21', chefs: ['Larsen', 'Hartmann'],          location: '' },
   { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'],        location: '' },
@@ -664,7 +664,7 @@ let DINNERS = (function() {
   return DEFAULT_DINNERS.map(d => ({ ...d, chefs: [...d.chefs] }));
 })();
 
-const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','van der Leeden','Thyregod',
+const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','Thyregod',
                          'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 const PASSIVE_MEMBERS = ['Jahnsen'];
 const ADMIN_CODE = 'TMK04';
@@ -703,6 +703,9 @@ async function saveDinners() {
 }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function chefHtml(name) {
+  return name === 'TBD' ? '<strong>TBD</strong>' : esc(name);
 }
 
 // ── HERO ─────────────────────────────────────────────────────────────
@@ -759,9 +762,9 @@ function renderSchedule() {
         html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
           <div class="dr-date">${formatShort(d.date)}</div>
           <div class="dr-chefs">
-            <span class="dr-chef">${esc(d.chefs[0])}</span>
+            <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
             <span class="dr-amp">&amp;</span>
-            <span class="dr-chef">${esc(d.chefs[1])}</span>
+            <span class="dr-chef">${chefHtml(d.chefs[1])}</span>
           </div>
           ${d.location ? `<span class="dr-location">🏠 ${esc(d.location)}</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
