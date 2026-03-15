@@ -350,6 +350,34 @@
       flex-shrink: 0;
     }
     .dinner-row:hover .edit-btn { opacity: 1; }
+    .add-dinner-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 12px 18px;
+      cursor: pointer;
+      width: 100%;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .add-dinner-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .dinner-add-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin-top: 20px;
+    }
     .dinner-edit-row {
       display: flex;
       flex-wrap: wrap;
@@ -659,6 +687,7 @@ const ADMIN_CODE = 'TMK04';
 // ── STATE ────────────────────────────────────────────────────────────
 let isAdmin = false;
 let editingIndex = -1;
+let addingDinner = false;
 
 // ── HELPERS ──────────────────────────────────────────────────────────
 function isPast(dateStr) {
@@ -750,6 +779,20 @@ function renderSchedule() {
     }
     html += `</div>`;
   }
+  if (isAdmin) {
+    if (addingDinner) {
+      html += `<div class="dinner-add-row">
+        <input class="edit-input" type="date" id="new-date" placeholder="Dato">
+        <input class="edit-input" type="text" id="new-chef1" placeholder="Kok 1">
+        <input class="edit-input" type="text" id="new-chef2" placeholder="Kok 2">
+        <input class="edit-input" type="text" id="new-loc" placeholder="Vært (navn)">
+        <button class="edit-save-btn" onclick="saveNewDinner()">Tilføj</button>
+        <button class="edit-cancel-btn" onclick="cancelAddDinner()">✕</button>
+      </div>`;
+    } else {
+      html += `<button class="add-dinner-btn" onclick="startAddDinner()">＋ Tilføj madklub</button>`;
+    }
+  }
   document.getElementById('schedule').innerHTML = html;
 }
 
@@ -782,9 +825,25 @@ function renderMembers() {
     PASSIVE_MEMBERS.map(m => `<div class="chip passive">${m}</div>`).join('');
 }
 
+function startAddDinner() { addingDinner = true; renderSchedule(); setTimeout(() => document.getElementById('new-date').focus(), 30); }
+function cancelAddDinner() { addingDinner = false; renderSchedule(); }
+function saveNewDinner() {
+  const date     = document.getElementById('new-date').value;
+  const chef1    = document.getElementById('new-chef1').value.trim();
+  const chef2    = document.getElementById('new-chef2').value.trim();
+  const location = document.getElementById('new-loc').value.trim();
+  if (!date || !chef1 || !chef2) return;
+  DINNERS.push({ date, chefs: [chef1, chef2], location });
+  DINNERS.sort((a, b) => a.date.localeCompare(b.date));
+  saveDinners();
+  addingDinner = false;
+  renderHero();
+  renderSchedule();
+}
+
 // ── LOGIN ─────────────────────────────────────────────────────────────
 function openLogin() {
-  if (isAdmin) { isAdmin = false; editingIndex = -1; updateLoginBtn(); renderSchedule(); return; }
+  if (isAdmin) { isAdmin = false; editingIndex = -1; addingDinner = false; updateLoginBtn(); renderSchedule(); return; }
   document.getElementById('login-error').style.display = 'none';
   document.getElementById('login-input').value = '';
   document.getElementById('login-modal').style.display = 'flex';
