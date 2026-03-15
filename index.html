@@ -12,15 +12,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f7f7f5;
-      --surface: #ffffff;
-      --surface-raised: #f0f0ee;
-      --border: #e0e0dc;
+      --bg: #edeae4;
+      --surface: #f4f1eb;
+      --surface-raised: #e6e2da;
+      --border: #d0cbc0;
       --accent: #111111;
       --accent-dim: #555555;
       --cream: #1a1a1a;
-      --muted: #888888;
-      --text: #2a2a2a;
+      --muted: #7a7570;
+      --text: #2a2520;
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -41,7 +41,7 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       padding-top: env(safe-area-inset-top);
-      background: rgba(247,247,245,0.92);
+      background: rgba(237,234,228,0.93);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -135,21 +135,37 @@
 
     /* ── NEXT DINNER CARD ── */
     .next-card {
-      background: var(--surface);
-      border: 1px solid rgba(0,0,0,0.12);
+      background: linear-gradient(160deg, #2c1f14 0%, #3d2a1a 100%);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 40px 48px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.22);
       position: relative;
+      color: #e8dfd0;
     }
+    .next-card .next-card-ornament {
+      background: transparent;
+      color: #c9a86c;
+    }
+    .next-card .next-eyebrow { color: #c9a86c; }
+    .next-card .next-date-text { color: #f0e8d8; }
+    .next-card .next-chefs {
+      border-top-color: rgba(255,255,255,0.12);
+      border-bottom-color: rgba(255,255,255,0.12);
+    }
+    .next-card .chef-name { color: #f0e8d8; }
+    .next-card .chef-amp { color: #9a8878; }
+    .next-card .cd-num { color: #c9a86c; }
+    .next-card .cd-label { color: #9a8878; }
+    .next-card .cd-sep { color: #9a8878; }
     .next-card-ornament {
       position: absolute;
       top: -14px; left: 50%;
       transform: translateX(-50%);
-      background: var(--bg);
-      color: var(--accent);
+      background: #2c1f14;
+      color: #c9a86c;
       padding: 0 14px;
       font-size: 16px;
       letter-spacing: 6px;
@@ -512,7 +528,7 @@
 
   <div class="next-card">
     <div class="next-card-ornament">✦ ✦ ✦</div>
-    <div class="next-eyebrow">Næste middag</div>
+    <div class="next-eyebrow">Næste madklub</div>
     <div class="next-date-text" id="next-date-text">—</div>
     <div class="next-chefs">
       <span class="chef-name" id="chef1">—</span>
@@ -697,7 +713,7 @@ function renderSchedule() {
             <span class="dr-amp">&amp;</span>
             <span class="dr-chef">${esc(d.chefs[1])}</span>
           </div>
-          ${isNxt ? '<span class="dr-badge">Næste</span>' : ''}
+          ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>`;
       }
