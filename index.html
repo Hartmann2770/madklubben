@@ -2,10 +2,652 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Madklubben</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0a08;
+      --surface: #1a1410;
+      --surface-raised: #241c16;
+      --border: #3a2e24;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --cream: #f5ede0;
+      --muted: #8a7968;
+      --text: #f0e8d8;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding-top: env(safe-area-inset-top);
+      background: rgba(13,10,8,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    #login-btn {
+      background: transparent;
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #login-btn:hover, #login-btn.active { border-color: var(--gold); color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(100px + env(safe-area-inset-top)) 24px 60px;
+      background:
+        radial-gradient(ellipse at 50% 10%, rgba(201,168,76,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 15% 85%, rgba(120,60,20,0.10) 0%, transparent 45%);
+    }
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(52px, 9vw, 88px);
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--cream);
+      margin-bottom: 14px;
+    }
+    .hero-sub {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 17px;
+      color: var(--muted);
+      margin-bottom: 56px;
+    }
+
+    /* ── NEXT DINNER CARD ── */
+    .next-card {
+      background: var(--surface);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 20px;
+      padding: 40px 48px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .next-card-ornament {
+      position: absolute;
+      top: -14px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg);
+      color: var(--gold);
+      padding: 0 14px;
+      font-size: 16px;
+      letter-spacing: 6px;
+    }
+    .next-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .next-date-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--cream);
+      margin-bottom: 20px;
+      text-transform: capitalize;
+    }
+    .next-chefs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .chef-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold-light);
+    }
+    .chef-amp { color: var(--muted); font-size: 14px; }
+
+    /* ── COUNTDOWN ── */
+    .countdown {
+      display: flex;
+      gap: 0;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .cd-unit { text-align: center; min-width: 60px; }
+    .cd-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      display: block;
+    }
+    .cd-label {
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 5px;
+      display: block;
+    }
+    .cd-sep {
+      font-size: 30px;
+      color: var(--muted);
+      opacity: 0.3;
+      padding: 2px 4px 0;
+      align-self: flex-start;
+    }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      max-width: 900px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .s-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .s-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px, 4vw, 38px);
+      color: var(--cream);
+      margin-bottom: 40px;
+    }
+
+    /* ── SCHEDULE ── */
+    .year-block { margin-bottom: 44px; }
+    .year-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .dinner-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 13px 16px;
+      border-radius: 8px;
+      transition: background 0.18s;
+    }
+    .dinner-row:hover { background: var(--surface); }
+    .dinner-row.past { opacity: 0.3; }
+    .dinner-row.is-next {
+      background: var(--surface);
+      border: 1px solid rgba(201,168,76,0.22);
+    }
+    .dr-date {
+      width: 76px;
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .dr-chefs {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dr-chef {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .dr-amp { font-size: 12px; color: var(--muted); }
+    .dr-badge {
+      margin-left: auto;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.18);
+      padding: 3px 9px;
+      border-radius: 10px;
+    }
+
+    /* ── MEMBERS ── */
+    .members-section-label {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .members-section-label + .members-section-label { margin-top: 28px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color 0.2s, color 0.2s;
+      cursor: default;
+    }
+    .chip:hover { border-color: rgba(201,168,76,0.3); color: var(--gold-light); }
+    .chip.passive { opacity: 0.38; font-style: italic; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    /* ── LOGIN MODAL ── */
+    #login-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.75);
+      align-items: center;
+      justify-content: center;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .login-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .login-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--cream);
+    }
+    .login-close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    .login-box p { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+    .login-box input {
+      width: 100%;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      padding: 12px 16px;
+      outline: none;
+      letter-spacing: 0.2em;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus { border-color: var(--gold); }
+    .login-error { display: none; color: #e07878; font-size: 13px; margin-bottom: 10px; }
+    .btn-gold {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--gold), #a8833a);
+      color: #1a1208;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-gold:hover { opacity: 0.88; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .next-card { padding: 28px 22px; }
+      .next-date-text { font-size: 18px; }
+      .chef-name { font-size: 20px; }
+      .cd-num { font-size: 32px; }
+      .cd-unit { min-width: 48px; }
+      .nav-links a:not(button) { display: none; }
+      .dr-badge { display: none; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Madklubben</h1>
+
+<nav>
+  <div class="nav-inner">
+    <span class="nav-logo" onclick="scrollTo({top:0,behavior:'smooth'})">Madklubben</span>
+    <div class="nav-links">
+      <a href="#program">Program</a>
+      <a href="#medlemmer">Medlemmer</a>
+      <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Venner &middot; Mad &middot; Vin</div>
+  <h1 class="hero-title">Madklubben</h1>
+  <p class="hero-sub">Mad er kærlighed</p>
+
+  <div class="next-card">
+    <div class="next-card-ornament">✦ ✦ ✦</div>
+    <div class="next-eyebrow">Næste middag</div>
+    <div class="next-date-text" id="next-date-text">—</div>
+    <div class="next-chefs">
+      <span class="chef-name" id="chef1">—</span>
+      <span class="chef-amp">&amp;</span>
+      <span class="chef-name" id="chef2">—</span>
+    </div>
+    <div class="countdown">
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-days">0</span>
+        <span class="cd-label">Dage</span>
+      </div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-hours">00</span>
+        <span class="cd-label">Timer</span>
+      </div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-mins">00</span>
+        <span class="cd-label">Min</span>
+      </div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-secs">00</span>
+        <span class="cd-label">Sek</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- PROGRAM -->
+<div class="section" id="program">
+  <div class="s-eyebrow">Kalender</div>
+  <h2 class="s-title">Kommende Middage</h2>
+  <div id="schedule"></div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- MEMBERS -->
+<div class="section" id="medlemmer">
+  <div class="s-eyebrow">Holdet</div>
+  <h2 class="s-title">Medlemmer</h2>
+  <div class="members-section-label">Aktive</div>
+  <div class="chips" id="active-members"></div>
+  <div class="members-section-label" style="margin-top:28px">Passive</div>
+  <div class="chips" id="passive-members"></div>
+</div>
+
+<footer>
+  <div class="footer-logo">Madklubben</div>
+  <p>God mad, gode venner</p>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal">
+  <div class="login-box">
+    <div class="login-header">
+      <h2>Admin</h2>
+      <button class="login-close-btn" onclick="closeLogin()">✕</button>
+    </div>
+    <p>Indtast koden for at administrere</p>
+    <input type="password" id="login-input" placeholder="Kode"
+           onkeydown="if(event.key==='Enter')submitLogin()">
+    <div class="login-error" id="login-error">Forkert kode — prøv igen</div>
+    <button class="btn-gold" onclick="submitLogin()">Log ind</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────
+const DINNERS = [
+  { date: '2025-01-25', chefs: ['Hartmann', 'Heide'] },
+  { date: '2025-05-03', chefs: ['Frøding', 'Bisp'] },
+  { date: '2025-08-23', chefs: ['Cronstjerne', 'Rifsdal'] },
+  { date: '2025-11-22', chefs: ['Thyregod', 'van der Leeden'] },
+  { date: '2026-01-31', chefs: ['Gjelsted', 'Heide'] },
+  { date: '2026-04-25', chefs: ['Larsen', 'Frøding'] },
+  { date: '2026-08-22', chefs: ['Hartmann', 'Bisp'] },
+  { date: '2026-11-21', chefs: ['Mekanikeren', 'Rifsdal'] },
+  { date: '2027-01-23', chefs: ['Cronstjerne', 'van der Leeden'] },
+  { date: '2027-04-24', chefs: ['Thyregod', 'Gjelsted'] },
+  { date: '2027-08-21', chefs: ['Larsen', 'Hartmann'] },
+  { date: '2027-11-20', chefs: ['Mekanikeren', 'Heide'] },
+];
+
+const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','van der Leeden','Thyregod',
+                         'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
+const PASSIVE_MEMBERS = ['Jahnsen'];
+const ADMIN_CODE = 'madklub';
+
+// ── STATE ────────────────────────────────────────────────────────────
+let isAdmin = false;
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+function isPast(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  return new Date(dateStr) < today;
+}
+function formatLong(dateStr) {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('da-DK', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+function formatShort(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+function getNext() {
+  return DINNERS.find(d => !isPast(d.date)) || null;
+}
+
+// ── HERO ─────────────────────────────────────────────────────────────
+function renderHero() {
+  const next = getNext();
+  if (!next) return;
+  document.getElementById('next-date-text').textContent = formatLong(next.date);
+  document.getElementById('chef1').textContent = next.chefs[0];
+  document.getElementById('chef2').textContent = next.chefs[1];
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────────────
+function tick() {
+  const next = getNext();
+  if (!next) return;
+  const diff = Math.max(0, new Date(next.date + 'T18:00:00') - Date.now());
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor(diff % 86400000 / 3600000);
+  const m = Math.floor(diff % 3600000 / 60000);
+  const s = Math.floor(diff % 60000 / 1000);
+  document.getElementById('cd-days').textContent  = d;
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+}
+
+// ── SCHEDULE ─────────────────────────────────────────────────────────
+function renderSchedule() {
+  const next = getNext();
+  const byYear = {};
+  for (const d of DINNERS) {
+    const y = d.date.slice(0, 4);
+    (byYear[y] = byYear[y] || []).push(d);
+  }
+  let html = '';
+  for (const [year, list] of Object.entries(byYear)) {
+    html += `<div class="year-block"><div class="year-heading">${year}</div>`;
+    for (const d of list) {
+      const past  = isPast(d.date);
+      const isNxt = next && d.date === next.date;
+      html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
+        <div class="dr-date">${formatShort(d.date)}</div>
+        <div class="dr-chefs">
+          <span class="dr-chef">${d.chefs[0]}</span>
+          <span class="dr-amp">&amp;</span>
+          <span class="dr-chef">${d.chefs[1]}</span>
+        </div>
+        ${isNxt ? '<span class="dr-badge">Næste</span>' : ''}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  document.getElementById('schedule').innerHTML = html;
+}
+
+// ── MEMBERS ──────────────────────────────────────────────────────────
+function renderMembers() {
+  document.getElementById('active-members').innerHTML =
+    ACTIVE_MEMBERS.map(m => `<div class="chip">${m}</div>`).join('');
+  document.getElementById('passive-members').innerHTML =
+    PASSIVE_MEMBERS.map(m => `<div class="chip passive">${m}</div>`).join('');
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────
+function openLogin() {
+  if (isAdmin) { isAdmin = false; updateLoginBtn(); return; }
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-input').value = '';
+  document.getElementById('login-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('login-input').focus(), 60);
+}
+function closeLogin() {
+  document.getElementById('login-modal').style.display = 'none';
+}
+function submitLogin() {
+  if (document.getElementById('login-input').value === ADMIN_CODE) {
+    isAdmin = true;
+    closeLogin();
+    updateLoginBtn();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-input').select();
+  }
+}
+function updateLoginBtn() {
+  const btn = document.getElementById('login-btn');
+  btn.textContent = isAdmin ? '🔓 Admin' : '🔒 Admin';
+  btn.classList.toggle('active', isAdmin);
+}
+document.getElementById('login-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('login-modal')) closeLogin();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────
+renderHero();
+renderSchedule();
+renderMembers();
+tick();
+setInterval(tick, 1000);
+</script>
 </body>
 </html>
