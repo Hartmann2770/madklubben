@@ -519,6 +519,81 @@
     }
     .btn-gold:hover { opacity: 0.82; }
 
+    /* ── SEND BESKED MODAL ── */
+    #msg-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.45);
+      align-items: center;
+      justify-content: center;
+    }
+    .msg-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 460px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.15);
+    }
+    .msg-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .msg-box .msg-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+    .msg-field {
+      width: 100%;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
+    }
+    .msg-field:focus { border-color: var(--accent); }
+    textarea.msg-field { resize: vertical; min-height: 120px; line-height: 1.5; }
+    .msg-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .msg-send-btn {
+      flex: 1;
+      padding: 13px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .msg-send-btn:hover { opacity: 0.82; }
+    .msg-send-btn:disabled { opacity: 0.5; cursor: default; }
+    .msg-cancel-btn {
+      padding: 13px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .msg-status { font-size: 13px; margin-top: 10px; min-height: 20px; }
+    .msg-status.ok  { color: #2a7a3a; }
+    .msg-status.err { color: #c0392b; }
+
     /* ── SCROLL INDICATOR ── */
     .scroll-indicator {
       margin-top: 32px;
@@ -575,6 +650,7 @@
     <div class="nav-links">
       <a href="#program">Program</a>
       <a href="#medlemmer">Medlemmer</a>
+      <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉ Send besked</button>
       <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
     </div>
   </div>
@@ -649,6 +725,21 @@
   <div class="footer-logo">Madklubben</div>
   <p><em>man skulle nok have været der...</em></p>
 </footer>
+
+<!-- SEND BESKED MODAL -->
+<div id="msg-modal">
+  <div class="msg-box">
+    <h2>Send besked</h2>
+    <p class="msg-sub">Sendes til alle medlemmer på listen</p>
+    <input class="msg-field" type="text" id="msg-subject" placeholder="Emne">
+    <textarea class="msg-field" id="msg-body" placeholder="Besked..."></textarea>
+    <div class="msg-actions">
+      <button class="msg-cancel-btn" onclick="closeMsg()">Annuller</button>
+      <button class="msg-send-btn" id="msg-send-btn" onclick="sendMsg()">Send ✉</button>
+    </div>
+    <div class="msg-status" id="msg-status"></div>
+  </div>
+</div>
 
 <!-- LOGIN MODAL -->
 <div id="login-modal">
@@ -897,7 +988,52 @@ function updateLoginBtn() {
   const btn = document.getElementById('login-btn');
   btn.textContent = isAdmin ? '🔓 Admin' : '🔒 Admin';
   btn.classList.toggle('active', isAdmin);
+  document.getElementById('msg-btn').style.display = isAdmin ? 'block' : 'none';
 }
+
+function openMsg() {
+  document.getElementById('msg-subject').value = '';
+  document.getElementById('msg-body').value = '';
+  document.getElementById('msg-status').textContent = '';
+  document.getElementById('msg-status').className = 'msg-status';
+  document.getElementById('msg-send-btn').disabled = false;
+  document.getElementById('msg-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('msg-subject').focus(), 60);
+}
+function closeMsg() {
+  document.getElementById('msg-modal').style.display = 'none';
+}
+async function sendMsg() {
+  const subject = document.getElementById('msg-subject').value.trim();
+  const message = document.getElementById('msg-body').value.trim();
+  const status  = document.getElementById('msg-status');
+  const sendBtn = document.getElementById('msg-send-btn');
+  if (!subject || !message) { status.textContent = 'Udfyld emne og besked.'; status.className = 'msg-status err'; return; }
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'Sender...';
+  status.textContent = '';
+  try {
+    const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_email', subject, message }) });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = `✓ Sendt til ${data.sent} modtager${data.sent !== 1 ? 'e' : ''}`;
+      status.className = 'msg-status ok';
+      sendBtn.textContent = 'Sendt ✓';
+    } else {
+      status.textContent = 'Fejl: ' + (data.error || 'Ukendt fejl');
+      status.className = 'msg-status err';
+      sendBtn.disabled = false; sendBtn.textContent = 'Send ✉';
+    }
+  } catch(e) {
+    status.textContent = 'Netværksfejl — prøv igen';
+    status.className = 'msg-status err';
+    sendBtn.disabled = false; sendBtn.textContent = 'Send ✉';
+  }
+}
+document.getElementById('msg-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('msg-modal')) closeMsg();
+});
 document.getElementById('login-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('login-modal')) closeLogin();
 });
