@@ -12,14 +12,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #edeae4;
-      --surface: #f4f1eb;
-      --surface-raised: #e6e2da;
-      --border: #d0cbc0;
-      --accent: #111111;
-      --accent-dim: #555555;
-      --cream: #1a1a1a;
-      --muted: #7a7570;
+      --bg: #f6f3ee;
+      --surface: #ffffff;
+      --surface-raised: #f0ece6;
+      --border: #ddd8d0;
+      --accent: #1e3d2a;
+      --accent-dim: #3a6b4a;
+      --cream: #1a2b20;
+      --muted: #8a8480;
       --text: #2a2520;
       --radius: 12px;
       --radius-sm: 8px;
@@ -41,7 +41,7 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       padding-top: env(safe-area-inset-top);
-      background: rgba(237,234,228,0.93);
+      background: rgba(246,243,238,0.93);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -84,7 +84,7 @@
     .nav-links a:hover { color: var(--accent); }
     #login-btn {
       background: transparent;
-      border: 1px solid rgba(0,0,0,0.15);
+      border: 1px solid rgba(30,61,42,0.2);
       color: var(--muted);
       padding: 6px 14px;
       border-radius: 20px;
@@ -136,38 +136,39 @@
     /* ── NEXT DINNER CARD ── */
     .next-card {
       background:
-        radial-gradient(ellipse at 25% 15%, rgba(180,210,255,0.18) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 85%, rgba(120,170,240,0.12) 0%, transparent 45%),
-        linear-gradient(160deg, #3d6494 0%, #2f5280 60%, #3a608e 100%);
-      border: 1px solid rgba(255,255,255,0.14);
+        radial-gradient(ellipse at 20% 15%, rgba(120,200,140,0.14) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 80%, rgba(60,120,80,0.10) 0%, transparent 45%),
+        linear-gradient(160deg, #1e3d2a 0%, #173022 60%, #1a3825 100%);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 40px 48px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 24px 64px rgba(20,50,100,0.22);
+      box-shadow: 0 24px 64px rgba(10,30,18,0.22);
       position: relative;
-      color: #d8eaff;
+      color: #c8ddd0;
     }
     .next-card .next-card-ornament {
-      background: #3d6494;
+      background: #1e3d2a;
       color: #ffe066;
     }
-    .next-card .next-eyebrow { color: rgba(200,225,255,0.7); }
-    .next-card .next-date-text { color: #eef4ff; }
+    .next-card .next-eyebrow { color: rgba(180,220,190,0.7); }
+    .next-card .next-date-text { color: #edf5f0; }
     .next-card .next-chefs {
-      border-top-color: rgba(255,255,255,0.15);
-      border-bottom-color: rgba(255,255,255,0.15);
+      border-top-color: rgba(255,255,255,0.12);
+      border-bottom-color: rgba(255,255,255,0.12);
     }
-    .next-card .chef-name { color: #eef4ff; }
-    .next-card .chef-amp { color: rgba(180,210,255,0.55); }
-    .next-card .cd-num { color: #eef4ff; }
-    .next-card .cd-label { color: rgba(190,220,255,0.6); }
-    .next-card .cd-sep { color: rgba(180,210,255,0.4); }
+    .next-card .chef-name { color: #edf5f0; }
+    .next-card .chef-amp { color: rgba(180,220,190,0.5); }
+    .next-card .cd-num { color: #edf5f0; }
+    .next-card .cd-label { color: rgba(180,220,190,0.6); }
+    .next-card .cd-sep { color: rgba(180,220,190,0.35); }
+    .next-card .next-location { color: rgba(180,220,190,0.65); }
     .next-card-ornament {
       position: absolute;
       top: -14px; left: 50%;
       transform: translateX(-50%);
-      background: #3d6494;
+      background: #1e3d2a;
       color: #ffe066;
       padding: 0 14px;
       font-size: 18px;
@@ -524,7 +525,7 @@
     .btn-gold {
       width: 100%;
       padding: 13px;
-      background: #111111;
+      background: #1e3d2a;
       color: #ffffff;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
@@ -572,7 +573,7 @@
 <div class="hero">
   <div class="hero-eyebrow">Venner &middot; Mad &middot; Vin</div>
   <h1 class="hero-title">Madklubben</h1>
-  <p class="hero-sub"><em>man skulle have været der...</em></p>
+  <p class="hero-sub"><em>man skulle nok have været der...</em></p>
 
   <div class="next-card">
     <div class="next-card-ornament">★ ★ ★</div>
@@ -631,7 +632,7 @@
 
 <footer>
   <div class="footer-logo">Madklubben</div>
-  <p>God mad, gode venner</p>
+  <p><em>man skulle nok have været der...</em></p>
 </footer>
 
 <!-- LOGIN MODAL -->
