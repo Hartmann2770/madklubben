@@ -157,6 +157,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // ── Send RSVP Reminder (kun pending) ─────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'send_rsvp_reminder') {
+        $dinnerDate = trim($body['dinnerDate'] ?? '');
+        if (!$dinnerDate) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Manglende dinnerDate']);
+            exit;
+        }
+        $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+        foreach ($dinners as $dinner) {
+            if ($dinner['date'] !== $dinnerDate) continue;
+            if (empty($dinner['rsvp'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'RSVP ikke sendt endnu']);
+                exit;
+            }
+            $dateFormatted = (new DateTime($dinnerDate))->format('d/m/Y');
+            $chefs         = implode(' & ', $dinner['chefs'] ?? []);
+            $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
+
+            ini_set('sendmail_from', 'simon@madklubben.com');
+            $headers  = "From: $from\r\n";
+            $headers .= "Reply-To: simon@madklubben.com\r\n";
+            $headers .= "Sender: simon@madklubben.com\r\n";
+            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+            $headers .= "MIME-Version: 1.0\r\n";
+
+            $failed = [];
+            $sent   = 0;
+            foreach ($dinner['rsvp'] as $name => $entry) {
+                if ($entry['status'] !== 'pending') continue;
+                $email = $members[$name] ?? null;
+                if (!$email || strpos($email, 'UDFYLD') !== false) {
+                    $failed[] = $name;
+                    continue;
+                }
+                $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
+                $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
+                $subject    = "Påmindelse: Svar på invitation til Madklubben den $dateFormatted";
+                $message    = "Hej $name,\n\nVi mangler stadig dit svar på Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSes der!\nMadklubben";
+                if (mail($email, $subject, $message, $headers)) {
+                    $sent++;
+                } else {
+                    $failed[] = $name;
+                }
+            }
+            echo json_encode(['ok' => true, 'sent' => $sent, 'failed' => $failed]);
+            exit;
+        }
+        http_response_code(404);
+        echo json_encode(['error' => 'Middag ikke fundet']);
+        exit;
+    }
+
     // ── Reset RSVP ────────────────────────────────────────────────────
     if (isset($body['action']) && $body['action'] === 'reset_rsvp') {
         $dinnerDate = trim($body['dinnerDate'] ?? '');
