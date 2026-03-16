@@ -746,19 +746,19 @@
     }
     .next-card.countdown-warning .cd-num { color: #c8860a; }
     .next-card.countdown-warning .cd-sep { color: #c8860a; }
-    .next-card.countdown-late {
-      border-color: #c0392b;
-      animation: glow-late 0.75s ease-in-out infinite;
+    .next-card.countdown-live {
+      border-color: #8b1818;
+      animation: glow-live 2s ease-in-out infinite;
     }
-    .next-card.countdown-late .cd-num { color: #c0392b; }
-    .next-card.countdown-late .cd-sep  { color: #c0392b; }
+    .next-card.countdown-live .cd-num { color: #8b1818; }
+    .next-card.countdown-live .cd-sep  { color: #8b1818; }
     @keyframes glow-warning {
       0%, 100% { box-shadow: 0 12px 40px rgba(200,134,10,0.18); }
       50%       { box-shadow: 0 12px 64px rgba(200,134,10,0.60); }
     }
-    @keyframes glow-late {
-      0%, 100% { box-shadow: 0 12px 40px rgba(192,57,43,0.18); }
-      50%       { box-shadow: 0 12px 64px rgba(192,57,43,0.68); }
+    @keyframes glow-live {
+      0%, 100% { box-shadow: 0 12px 40px rgba(139,24,24,0.15); }
+      50%       { box-shadow: 0 12px 64px rgba(139,24,24,0.55); }
     }
     #cd-status { margin-bottom: 0; }
     .cd-warning-msg {
@@ -769,19 +769,49 @@
       margin-bottom: 14px;
       letter-spacing: 0.02em;
     }
-    .cd-late-msg {
+    .cd-live-msg {
       font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      color: #c0392b;
-      font-size: 16px;
+      font-size: 18px;
+      color: #8b1818;
+      font-weight: 600;
       margin-bottom: 14px;
-      letter-spacing: 0.04em;
-      animation: flash-late 0.65s ease-in-out infinite;
+      letter-spacing: 0.03em;
+      animation: pulse-live 2.5s ease-in-out infinite;
     }
-    @keyframes flash-late {
+    @keyframes pulse-live {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0.45; }
+      50%       { opacity: 0.6; }
     }
+
+    /* ── TEST PANEL (kun admin) ── */
+    #test-panel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    #test-panel-label {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+    .test-btns { display: flex; gap: 6px; }
+    .test-btn {
+      font-size: 11px;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.8);
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .test-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .test-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,0,0,0.05); font-weight: 600; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
@@ -895,6 +925,14 @@
       </div>
     </div>
     <div class="rsvp-confirmed-list" id="next-rsvp" style="display:none"></div>
+  </div>
+  <div id="test-panel">
+    <div id="test-panel-label">Test nedtælling</div>
+    <div class="test-btns">
+      <button class="test-btn active" id="test-btn-normal"  onclick="setTestMode(null)">Normal</button>
+      <button class="test-btn"        id="test-btn-warning" onclick="setTestMode('warning')">⚠️ Advarsel</button>
+      <button class="test-btn"        id="test-btn-live"    onclick="setTestMode('live')">🍷 I gang</button>
+    </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true" onclick="document.getElementById('program').scrollIntoView({behavior:'smooth'})">
     <span></span>
@@ -1091,11 +1129,25 @@ function renderHero() {
 }
 
 // ── COUNTDOWN ────────────────────────────────────────────────────────
+let testMode = null; // null | 'warning' | 'live'
+
+function setTestMode(mode) {
+  testMode = mode;
+  ['normal','warning','live'].forEach(m => {
+    const b = document.getElementById('test-btn-' + m);
+    if (b) b.classList.toggle('active', (mode === null ? 'normal' : mode) === m);
+  });
+  tick();
+}
+
 function tick() {
   const next = getNext();
   if (!next) return;
 
-  const diff     = new Date(next.date + 'T18:00:00') - Date.now(); // kan være negativ
+  let diff = new Date(next.date + 'T18:00:00') - Date.now();
+  if (testMode === 'warning') diff = 5 * 60 * 1000;        // simuler 5 min til
+  if (testMode === 'live')    diff = -(90 * 60 * 1000);    // simuler 1.5 t inde i middag
+
   const card     = document.querySelector('.next-card');
   const statusEl = document.getElementById('cd-status');
   const daysUnit = document.getElementById('cd-unit-days');
@@ -1103,51 +1155,57 @@ function tick() {
   const sepDays  = document.getElementById('cd-sep-days');
   const sepHrs   = document.getElementById('cd-sep-hours');
 
-  function showAllUnits()  { daysUnit.style.display = ''; hrsUnit.style.display = ''; sepDays.style.display = ''; sepHrs.style.display = ''; }
-  function hideTopUnits()  { daysUnit.style.display = 'none'; hrsUnit.style.display = 'none'; sepDays.style.display = 'none'; sepHrs.style.display = 'none'; }
+  function showAll()     { daysUnit.style.display=''; hrsUnit.style.display=''; sepDays.style.display=''; sepHrs.style.display=''; }
+  function showHrsOnly() { daysUnit.style.display='none'; hrsUnit.style.display=''; sepDays.style.display='none'; sepHrs.style.display=''; }
+  function showMinsOnly(){ daysUnit.style.display='none'; hrsUnit.style.display='none'; sepDays.style.display='none'; sepHrs.style.display='none'; }
 
   if (diff > 600000) {
     // ── Normal: mere end 10 min til ──────────────────────────────
-    card.classList.remove('countdown-warning', 'countdown-late');
+    card.classList.remove('countdown-warning', 'countdown-live');
     if (statusEl) statusEl.innerHTML = '';
-    showAllUnits();
+    showAll();
     const d = Math.floor(diff / 86400000);
     const h = Math.floor(diff % 86400000 / 3600000);
     const m = Math.floor(diff % 3600000 / 60000);
     const s = Math.floor(diff % 60000 / 1000);
-    document.getElementById('cd-days').textContent  = d;
-    document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
-    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
-    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
-    document.getElementById('cd-label-mins').textContent = 'Min';
-    document.getElementById('cd-label-secs').textContent = 'Sek';
+    document.getElementById('cd-days').textContent            = d;
+    document.getElementById('cd-hours').textContent           = String(h).padStart(2,'0');
+    document.getElementById('cd-mins').textContent            = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent            = String(s).padStart(2,'0');
+    document.getElementById('cd-label-days').textContent      = 'Dage';
+    document.getElementById('cd-label-hours').textContent     = 'Timer';
+    document.getElementById('cd-label-mins').textContent      = 'Min';
+    document.getElementById('cd-label-secs').textContent      = 'Sek';
 
   } else if (diff > 0) {
     // ── Advarsel: sidste 10 minutter ─────────────────────────────
     card.classList.add('countdown-warning');
-    card.classList.remove('countdown-late');
+    card.classList.remove('countdown-live');
     if (statusEl) statusEl.innerHTML = '<div class="cd-warning-msg">🍺 Skynd dig — ølstraf venter!</div>';
-    hideTopUnits();
+    showMinsOnly();
     const m = Math.floor(diff / 60000);
     const s = Math.floor(diff % 60000 / 1000);
-    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
-    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
-    document.getElementById('cd-label-mins').textContent = 'Min';
-    document.getElementById('cd-label-secs').textContent = 'Sek';
+    document.getElementById('cd-mins').textContent        = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent        = String(s).padStart(2,'0');
+    document.getElementById('cd-label-mins').textContent  = 'Min';
+    document.getElementById('cd-label-secs').textContent  = 'Sek';
 
   } else {
-    // ── FOR SENT: efter 18:00 ─────────────────────────────────────
+    // ── Madklub i gang: 18:00 → midnat ───────────────────────────
     card.classList.remove('countdown-warning');
-    card.classList.add('countdown-late');
-    if (statusEl) statusEl.innerHTML = '<div class="cd-late-msg">FOR SENT! 🍺 Øl til kassen!</div>';
-    hideTopUnits();
+    card.classList.add('countdown-live');
+    if (statusEl) statusEl.innerHTML = '<div class="cd-live-msg">🍷 Madklub er i gang 🍷</div>';
+    showHrsOnly();
     const elapsed = -diff;
-    const m = Math.floor(elapsed / 60000);
+    const h = Math.floor(elapsed / 3600000);
+    const m = Math.floor(elapsed % 3600000 / 60000);
     const s = Math.floor(elapsed % 60000 / 1000);
-    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
-    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
-    document.getElementById('cd-label-mins').textContent = 'Min';
-    document.getElementById('cd-label-secs').textContent = 'Sek';
+    document.getElementById('cd-hours').textContent          = String(h).padStart(2,'0');
+    document.getElementById('cd-mins').textContent           = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent           = String(s).padStart(2,'0');
+    document.getElementById('cd-label-hours').textContent    = 'Timer';
+    document.getElementById('cd-label-mins').textContent     = 'Min';
+    document.getElementById('cd-label-secs').textContent     = 'Sek';
   }
 }
 
@@ -1399,6 +1457,8 @@ function updateLoginBtn() {
   btn.textContent = isAdmin ? '🔓 Admin' : '🔒 Admin';
   btn.classList.toggle('active', isAdmin);
   document.getElementById('msg-btn').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('test-panel').style.display = isAdmin ? 'flex' : 'none';
+  if (!isAdmin) { testMode = null; }
 }
 
 function openMsg() {
