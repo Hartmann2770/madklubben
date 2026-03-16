@@ -981,8 +981,8 @@ function renderHero() {
       const declined  = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'declined');
       const pending   = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'pending');
       const parts = [];
-      if (confirmed.length) parts.push(`<strong>Kommer (${confirmed.length}):</strong> ${confirmed.map(n => esc(n)).join(' · ')}`);
-      if (declined.length)  parts.push(`<strong>Kan ikke (${declined.length}):</strong> ${declined.map(n => esc(n)).join(' · ')}`);
+      if (confirmed.length) parts.push(`<strong>Kommer (${confirmed.length})${isAdmin ? ':' : ''}</strong>${isAdmin ? ' ' + confirmed.map(n => esc(n)).join(' · ') : ''}`);
+      if (declined.length)  parts.push(`<strong>Kan ikke (${declined.length})${isAdmin ? ':' : ''}</strong>${isAdmin ? ' ' + declined.map(n => esc(n)).join(' · ') : ''}`);
       if (pending.length)   parts.push(`<span style="color:var(--muted)">(${pending.length}) mangler svar</span>`);
       if (parts.length) {
         rsvpEl.innerHTML = parts.join('<br>');
@@ -1192,15 +1192,23 @@ function showRsvpOverlay(rsvpToken, svar) {
   .then(data => {
     history.replaceState(null, '', window.location.pathname);
     if (data.ok) {
-      const affirm  = svar === 'nej' ? 'afmeldt' : 'bekræftet';
-      const icon    = svar === 'nej' ? '😢' : '🎉';
-      const heading = svar === 'nej' ? 'Afmelding registreret' : 'Vi ses til Madklubben!';
-      const dateStr = data.date ? ` den ${formatShort(data.date)}` : '';
-      box.innerHTML = `
-        <div class="rsvp-icon">${icon}</div>
-        <h2>${heading}</h2>
-        <p>Hej ${esc(data.name)},<br>din ${affirm} er registreret${dateStr}.</p>
-        <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+      const dinner  = data.date ? DINNERS.find(d => d.date === data.date) : null;
+      const num     = dinner ? getDinnerNumber(dinner) : '?';
+      const dateStr = data.date ? formatShort(data.date) : '';
+      const numDate = `Madklub #${num} den ${dateStr}`;
+      if (svar === 'nej') {
+        box.innerHTML = `
+          <div class="rsvp-icon">😢</div>
+          <h2>Afmelding registreret</h2>
+          <p>Hej ${esc(data.name)},<br><br>din afmelding til ${numDate} er registreret.<br><br>Vi håber at se dig næste gang!</p>
+          <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+      } else {
+        box.innerHTML = `
+          <div class="rsvp-icon">🎉</div>
+          <h2>Vi ses til Madklubben!</h2>
+          <p>Hej ${esc(data.name)},<br><br>din tilmelding til ${numDate} er bekræftet.<br><br>Glæder os til at se dig!</p>
+          <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+      }
       syncRsvpFromServer();
     } else {
       box.innerHTML = `
