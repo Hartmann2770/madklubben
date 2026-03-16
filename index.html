@@ -150,21 +150,17 @@
       transform: translateX(-50%);
       background: #111111;
       color: #c8860a;
-      padding: 3px 14px;
-      font-size: 16px;
-      letter-spacing: 6px;
+      padding: 4px 18px;
+      font-size: 13px;
+      letter-spacing: 0.12em;
       border-radius: 8px;
       white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
     }
     .ornament-num {
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #e8a020;
+      letter-spacing: 0.06em;
     }
     .next-eyebrow {
       font-size: 12px;
@@ -807,8 +803,7 @@
       /* Hero */
       .hero-sub { margin-bottom: 32px; }
       .next-card { padding: 28px 20px; }
-      .next-card-ornament { font-size: 13px; padding: 3px 10px; gap: 4px; }
-      .ornament-num { font-size: 11px; }
+      .next-card-ornament { font-size: 12px; padding: 3px 14px; }
       .next-date-text { font-size: 18px; }
       .chef-name { font-size: 19px; }
       .cd-num { font-size: 30px; }
@@ -1088,9 +1083,9 @@ function renderHero() {
   document.getElementById('hero-eyebrow').textContent =
     `${stats.count} Madklubber · ${stats.years} år`;
 
-  // Ornament: ★★★ Madklub #67 ★★★
+  // Ornament: Madklub  N° 67
   document.getElementById('next-card-ornament').innerHTML =
-    `★ ★ ★<span class="ornament-num">Madklub #${num}</span>★ ★ ★`;
+    `Madklub &nbsp;<span class="ornament-num">N° ${num}</span>`;
 
   // Fjern gammel next-eyebrow tekst (tallet er nu i ornamentet)
   document.getElementById('next-eyebrow').textContent = 'Næste madklub';
