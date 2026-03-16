@@ -118,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dateFormatted = (new DateTime($dinnerDate))->format('d/m/Y');
             $chefs         = implode(' & ', $dinner['chefs'] ?? []);
             $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
+            $dinnerNumber  = isset($body['dinnerNumber']) ? intval($body['dinnerNumber']) : '?';
 
             ini_set('sendmail_from', 'simon@madklubben.com');
             $headers  = "From: $from\r\n";
@@ -136,8 +137,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
                 $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
-                $subject    = "Invitation til Madklubben den $dateFormatted";
-                $message    = "Hej $name,\n\nDu er inviteret til næste Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSes der!\nMadklubben";
+                $subject    = "Invitation til Madklub #{$dinnerNumber} den $dateFormatted";
+                $message    = "Hej $name,\n\nDu er inviteret til Madklub #{$dinnerNumber} den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSes der!\nMadklubben";
 
                 if (mail($email, $subject, $message, $headers)) {
                     $sent++;

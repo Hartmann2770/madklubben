@@ -288,11 +288,19 @@
       border: 1px solid rgba(0,0,0,0.12);
     }
     .dr-date {
-      width: 76px;
+      width: 80px;
       flex-shrink: 0;
       font-size: 13px;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
+    }
+    .dr-num {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 1px;
+      font-weight: 500;
     }
     .dr-chefs {
       flex: 1;
@@ -764,7 +772,7 @@
 
   <div class="next-card">
     <div class="next-card-ornament">★ ★ ★</div>
-    <div class="next-eyebrow">Næste madklub</div>
+    <div class="next-eyebrow" id="next-eyebrow">Næste madklub</div>
     <div class="next-date-text" id="next-date-text">—</div>
     <div class="next-location" id="next-location"></div>
     <div class="next-chefs">
@@ -904,7 +912,15 @@ let DINNERS = (function() {
 const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','Thyregod',
                          'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 const PASSIVE_MEMBERS = ['Jahnsen'];
-const ADMIN_CODE = 'TMK04';
+const ADMIN_CODE    = 'TMK04';
+const ANCHOR_DATE   = '2026-01-31'; // Madklub #66
+const ANCHOR_NUMBER = 66;
+function getDinnerNumber(dinner) {
+  const sorted     = [...DINNERS].sort((a, b) => a.date.localeCompare(b.date));
+  const anchorIdx  = sorted.findIndex(d => d.date === ANCHOR_DATE);
+  const dinnerIdx  = sorted.findIndex(d => d.date === dinner.date);
+  return ANCHOR_NUMBER + (dinnerIdx - anchorIdx);
+}
 
 // ── STATE ────────────────────────────────────────────────────────────
 let isAdmin = false;
@@ -949,20 +965,25 @@ function chefHtml(name) {
 function renderHero() {
   const next = getNext();
   if (!next) return;
+  const num = getDinnerNumber(next);
+  document.getElementById('next-eyebrow').textContent = `Madklub #${num} · Næste`;
   document.getElementById('next-date-text').textContent = formatLong(next.date);
   document.getElementById('chef1').textContent = next.chefs[0];
   document.getElementById('chef2').textContent = next.chefs[1];
   const locEl = document.getElementById('next-location');
   locEl.textContent = next.location ? '🏠 Hos ' + next.location : '';
 
-  // RSVP-bekræftede under nedtælling
+  // RSVP-oversigt — synlig for alle
   const rsvpEl = document.getElementById('next-rsvp');
   if (rsvpEl) {
     if (next.rsvp) {
       const confirmed = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'confirmed');
-      const total = Object.keys(next.rsvp).length;
-      if (confirmed.length > 0) {
-        rsvpEl.innerHTML = `<strong>Tilmeldte (${confirmed.length}/${total}):</strong> ${confirmed.map(n => esc(n)).join(' · ')}`;
+      const declined  = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'declined');
+      const parts = [];
+      if (confirmed.length) parts.push(`<strong>Kommer (${confirmed.length}):</strong> ${confirmed.map(n => esc(n)).join(' · ')}`);
+      if (declined.length)  parts.push(`<strong>Kan ikke (${declined.length}):</strong> ${declined.map(n => esc(n)).join(' · ')}`);
+      if (parts.length) {
+        rsvpEl.innerHTML = parts.join('<br>');
         rsvpEl.style.display = '';
       } else {
         rsvpEl.style.display = 'none';
@@ -1027,8 +1048,9 @@ function renderSchedule() {
         const rsvpSendBtn = isAdmin && !past && !d.rsvp
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
+        const num = getDinnerNumber(d);
         html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
-          <div class="dr-date">${formatShort(d.date)}</div>
+          <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
             <span class="dr-amp">&amp;</span>
@@ -1108,10 +1130,12 @@ function saveNewDinner() {
 
 // ── RSVP ─────────────────────────────────────────────────────────────
 async function sendRsvp(dinnerDate) {
-  if (!confirm(`Sende RSVP-invitationer til alle 10 medlemmer for middagen den ${formatShort(dinnerDate)}?`)) return;
+  const dinner = DINNERS.find(d => d.date === dinnerDate);
+  const num    = dinner ? getDinnerNumber(dinner) : '?';
+  if (!confirm(`Sende RSVP-invitationer til alle 10 medlemmer for Madklub #${num} den ${formatShort(dinnerDate)}?`)) return;
   try {
     const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_rsvp', dinnerDate }) });
+      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_rsvp', dinnerDate, dinnerNumber: num }) });
     const data = await res.json();
     if (data.ok) {
       const failMsg = data.failed && data.failed.length ? `\nMislykkedes: ${data.failed.join(', ')} (udfyld email i api.php)` : '';
