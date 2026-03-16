@@ -282,10 +282,11 @@
       transition: background 0.18s;
     }
     .dinner-row:hover { background: var(--surface); }
-    .dinner-row.past { opacity: 0.3; }
+    .dinner-row.past { opacity: 0.5; }
     .dinner-row.is-next {
       background: var(--surface);
       border: 1px solid rgba(0,0,0,0.12);
+      border-left: 3px solid #c8860a;
     }
     .dr-date {
       width: 80px;
@@ -297,10 +298,10 @@
     .dr-num {
       font-size: 10px;
       letter-spacing: 0.08em;
-      color: var(--accent);
+      color: #c8860a;
       display: block;
       margin-bottom: 1px;
-      font-weight: 500;
+      font-weight: 600;
     }
     .dr-chefs {
       flex: 1;
@@ -319,11 +320,12 @@
       font-size: 10px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.12);
+      color: #7a4e00;
+      background: rgba(200,134,10,0.13);
+      border: 1px solid rgba(200,134,10,0.45);
       padding: 3px 9px;
       border-radius: 10px;
+      font-weight: 600;
     }
 
     /* ── ADMIN EDIT ── */
@@ -709,21 +711,76 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      opacity: 0.45;
+      opacity: 0.7;
       animation: bounce 2s ease-in-out infinite;
+      cursor: pointer;
     }
     .scroll-indicator span {
       display: block;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-right: 2px solid var(--accent);
       border-bottom: 2px solid var(--accent);
       transform: rotate(45deg);
     }
-    .scroll-indicator span:nth-child(2) { margin-top: -6px; opacity: 0.5; }
+    .scroll-indicator span:nth-child(2) { margin-top: -8px; opacity: 0.45; }
+    .scroll-indicator-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(6px); }
+      50%       { transform: translateY(7px); }
+    }
+
+    /* ── COUNTDOWN MODES ── */
+    .next-card {
+      transition: border-color 0.6s ease, box-shadow 0.6s ease;
+    }
+    .next-card.countdown-warning {
+      border-color: #c8860a;
+      animation: glow-warning 1.2s ease-in-out infinite;
+    }
+    .next-card.countdown-warning .cd-num { color: #c8860a; }
+    .next-card.countdown-warning .cd-sep { color: #c8860a; }
+    .next-card.countdown-late {
+      border-color: #c0392b;
+      animation: glow-late 0.75s ease-in-out infinite;
+    }
+    .next-card.countdown-late .cd-num { color: #c0392b; }
+    .next-card.countdown-late .cd-sep  { color: #c0392b; }
+    @keyframes glow-warning {
+      0%, 100% { box-shadow: 0 12px 40px rgba(200,134,10,0.18); }
+      50%       { box-shadow: 0 12px 64px rgba(200,134,10,0.60); }
+    }
+    @keyframes glow-late {
+      0%, 100% { box-shadow: 0 12px 40px rgba(192,57,43,0.18); }
+      50%       { box-shadow: 0 12px 64px rgba(192,57,43,0.68); }
+    }
+    #cd-status { margin-bottom: 0; }
+    .cd-warning-msg {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: #c8860a;
+      font-size: 15px;
+      margin-bottom: 14px;
+      letter-spacing: 0.02em;
+    }
+    .cd-late-msg {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      color: #c0392b;
+      font-size: 16px;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+      animation: flash-late 0.65s ease-in-out infinite;
+    }
+    @keyframes flash-late {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.45; }
     }
 
     /* ── RESPONSIVE ── */
@@ -815,32 +872,34 @@
       <span class="chef-amp">&amp;</span>
       <span class="chef-name" id="chef2">—</span>
     </div>
+    <div id="cd-status"></div>
     <div class="countdown">
-      <div class="cd-unit">
+      <div class="cd-unit" id="cd-unit-days">
         <span class="cd-num" id="cd-days">0</span>
-        <span class="cd-label">Dage</span>
+        <span class="cd-label" id="cd-label-days">Dage</span>
       </div>
-      <span class="cd-sep">:</span>
-      <div class="cd-unit">
+      <span class="cd-sep" id="cd-sep-days">:</span>
+      <div class="cd-unit" id="cd-unit-hours">
         <span class="cd-num" id="cd-hours">00</span>
-        <span class="cd-label">Timer</span>
+        <span class="cd-label" id="cd-label-hours">Timer</span>
       </div>
-      <span class="cd-sep">:</span>
+      <span class="cd-sep" id="cd-sep-hours">:</span>
       <div class="cd-unit">
         <span class="cd-num" id="cd-mins">00</span>
-        <span class="cd-label">Min</span>
+        <span class="cd-label" id="cd-label-mins">Min</span>
       </div>
       <span class="cd-sep">:</span>
       <div class="cd-unit">
         <span class="cd-num" id="cd-secs">00</span>
-        <span class="cd-label">Sek</span>
+        <span class="cd-label" id="cd-label-secs">Sek</span>
       </div>
     </div>
     <div class="rsvp-confirmed-list" id="next-rsvp" style="display:none"></div>
   </div>
-  <div class="scroll-indicator" aria-hidden="true">
+  <div class="scroll-indicator" aria-hidden="true" onclick="document.getElementById('program').scrollIntoView({behavior:'smooth'})">
     <span></span>
     <span></span>
+    <div class="scroll-indicator-label">Program</div>
   </div>
 </div>
 
@@ -1035,15 +1094,61 @@ function renderHero() {
 function tick() {
   const next = getNext();
   if (!next) return;
-  const diff = Math.max(0, new Date(next.date + 'T18:00:00') - Date.now());
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor(diff % 86400000 / 3600000);
-  const m = Math.floor(diff % 3600000 / 60000);
-  const s = Math.floor(diff % 60000 / 1000);
-  document.getElementById('cd-days').textContent  = d;
-  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
-  document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
-  document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+
+  const diff     = new Date(next.date + 'T18:00:00') - Date.now(); // kan være negativ
+  const card     = document.querySelector('.next-card');
+  const statusEl = document.getElementById('cd-status');
+  const daysUnit = document.getElementById('cd-unit-days');
+  const hrsUnit  = document.getElementById('cd-unit-hours');
+  const sepDays  = document.getElementById('cd-sep-days');
+  const sepHrs   = document.getElementById('cd-sep-hours');
+
+  function showAllUnits()  { daysUnit.style.display = ''; hrsUnit.style.display = ''; sepDays.style.display = ''; sepHrs.style.display = ''; }
+  function hideTopUnits()  { daysUnit.style.display = 'none'; hrsUnit.style.display = 'none'; sepDays.style.display = 'none'; sepHrs.style.display = 'none'; }
+
+  if (diff > 600000) {
+    // ── Normal: mere end 10 min til ──────────────────────────────
+    card.classList.remove('countdown-warning', 'countdown-late');
+    if (statusEl) statusEl.innerHTML = '';
+    showAllUnits();
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor(diff % 86400000 / 3600000);
+    const m = Math.floor(diff % 3600000 / 60000);
+    const s = Math.floor(diff % 60000 / 1000);
+    document.getElementById('cd-days').textContent  = d;
+    document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+    document.getElementById('cd-label-mins').textContent = 'Min';
+    document.getElementById('cd-label-secs').textContent = 'Sek';
+
+  } else if (diff > 0) {
+    // ── Advarsel: sidste 10 minutter ─────────────────────────────
+    card.classList.add('countdown-warning');
+    card.classList.remove('countdown-late');
+    if (statusEl) statusEl.innerHTML = '<div class="cd-warning-msg">🍺 Skynd dig — ølstraf venter!</div>';
+    hideTopUnits();
+    const m = Math.floor(diff / 60000);
+    const s = Math.floor(diff % 60000 / 1000);
+    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+    document.getElementById('cd-label-mins').textContent = 'Min';
+    document.getElementById('cd-label-secs').textContent = 'Sek';
+
+  } else {
+    // ── FOR SENT: efter 18:00 ─────────────────────────────────────
+    card.classList.remove('countdown-warning');
+    card.classList.add('countdown-late');
+    if (statusEl) statusEl.innerHTML = '<div class="cd-late-msg">FOR SENT! 🍺 Øl til kassen!</div>';
+    hideTopUnits();
+    const elapsed = -diff;
+    const m = Math.floor(elapsed / 60000);
+    const s = Math.floor(elapsed % 60000 / 1000);
+    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+    document.getElementById('cd-label-mins').textContent = 'Min';
+    document.getElementById('cd-label-secs').textContent = 'Sek';
+  }
 }
 
 // ── SCHEDULE ─────────────────────────────────────────────────────────
@@ -1071,7 +1176,7 @@ function renderSchedule() {
           <button class="edit-cancel-btn" onclick="cancelEdit()">✕</button>
         </div>`;
       } else {
-        const rsvpPanel = isAdmin && !past && d.rsvp ? (function() {
+        const rsvpPanel = isAdmin && isNxt && d.rsvp ? (function() {
           const statusIcon = { confirmed: '✓', declined: '✗', pending: '–' };
           const chips = Object.entries(d.rsvp).map(([name, entry]) =>
             `<span class="rsvp-chip ${entry.status}">${statusIcon[entry.status] || '–'} ${esc(name)}</span>`
@@ -1082,7 +1187,7 @@ function renderSchedule() {
             <button class="rsvp-reset-btn" onclick="resetRsvp('${esc(d.date)}')">↺ Nulstil</button>
           </div>`;
         })() : '';
-        const rsvpSendBtn = isAdmin && !past && !d.rsvp
+        const rsvpSendBtn = isAdmin && isNxt && !d.rsvp
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
         const num = getDinnerNumber(d);
