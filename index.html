@@ -979,9 +979,11 @@ function renderHero() {
     if (next.rsvp) {
       const confirmed = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'confirmed');
       const declined  = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'declined');
+      const pending   = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'pending');
       const parts = [];
       if (confirmed.length) parts.push(`<strong>Kommer (${confirmed.length}):</strong> ${confirmed.map(n => esc(n)).join(' · ')}`);
       if (declined.length)  parts.push(`<strong>Kan ikke (${declined.length}):</strong> ${declined.map(n => esc(n)).join(' · ')}`);
+      if (pending.length)   parts.push(`<span style="color:var(--muted)">(${pending.length}) mangler svar</span>`);
       if (parts.length) {
         rsvpEl.innerHTML = parts.join('<br>');
         rsvpEl.style.display = '';
