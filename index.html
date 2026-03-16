@@ -728,13 +728,36 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
-      .next-card { padding: 28px 22px; }
-      .next-date-text { font-size: 18px; }
-      .chef-name { font-size: 20px; }
-      .cd-num { font-size: 32px; }
-      .cd-unit { min-width: 48px; }
+      /* Nav — undgå overflow når admin-knapper vises */
+      .nav-inner { padding: 12px 16px; }
+      .nav-links { gap: 8px; }
       .nav-links a:not(button) { display: none; }
+      .msg-btn-label { display: none; }
+      #msg-btn { padding: 6px 10px !important; }
+      #login-btn { padding: 6px 10px; }
+
+      /* Hero */
+      .hero-sub { margin-bottom: 32px; }
+      .next-card { padding: 28px 20px; }
+      .next-date-text { font-size: 18px; }
+      .chef-name { font-size: 19px; }
+      .cd-num { font-size: 30px; }
+      .cd-unit { min-width: 44px; }
+      .rsvp-confirmed-list { line-height: 1.9; font-size: 12px; }
+
+      /* Sections */
+      .section { padding: 56px 20px; }
+
+      /* Schedule */
       .dr-badge { display: none; }
+      .dinner-row { gap: 10px; padding: 12px 10px; }
+      .dr-chef { font-size: 14px; }
+      .dr-chefs { gap: 6px; }
+      .dr-location { display: none; }
+      .rsvp-chips { gap: 4px; }
+      .rsvp-chip { font-size: 11px; padding: 2px 8px; }
+
+      /* Admin edit forms */
       .edit-input[type="date"] { width: 130px; }
       .edit-input[type="text"] { width: 100px; }
       .dinner-edit-row, .dinner-add-row { flex-direction: column; align-items: stretch; }
@@ -744,6 +767,18 @@
       .dinner-edit-row .edit-cancel-btn,
       .dinner-add-row .edit-save-btn,
       .dinner-add-row .edit-cancel-btn { width: 100%; padding: 10px; }
+
+      /* Modals — scrollbar ved lille/landscape skærm */
+      .login-box, .msg-box, .rsvp-box {
+        padding: 28px 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+
+    /* Touch-enheder: edit-knap altid synlig (hover virker ikke på mobil) */
+    @media (hover: none) {
+      .edit-btn { opacity: 0.55; }
     }
   </style>
 </head>
@@ -758,7 +793,7 @@
     <div class="nav-links">
       <a href="#program">Program</a>
       <a href="#medlemmer">Medlemmer</a>
-      <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉ Send besked</button>
+      <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉<span class="msg-btn-label"> Send besked</span></button>
       <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
     </div>
   </div>
