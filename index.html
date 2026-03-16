@@ -594,6 +594,106 @@
     .msg-status.ok  { color: #2a7a3a; }
     .msg-status.err { color: #c0392b; }
 
+    /* ── RSVP ── */
+    .rsvp-confirmed-list {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .rsvp-confirmed-list strong { color: var(--accent); }
+    .rsvp-panel {
+      margin-top: 10px;
+      padding: 10px 0 4px;
+    }
+    .rsvp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .rsvp-chip {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .rsvp-chip.confirmed { background: #e8f5e9; border-color: #81c784; color: #2a7a3a; }
+    .rsvp-chip.declined  { background: #fdecea; border-color: #e57373; color: #c0392b; }
+    .rsvp-chip.pending   { background: var(--surface-raised); color: var(--muted); }
+    .rsvp-send-btn {
+      margin-top: 10px;
+      background: none;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .rsvp-send-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .rsvp-reset-btn {
+      margin-top: 6px;
+      margin-left: 6px;
+      background: none;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .rsvp-reset-btn:hover { border-color: #c0392b; color: #c0392b; }
+
+    /* ── RSVP MODAL ── */
+    #rsvp-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+    }
+    .rsvp-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+      text-align: center;
+    }
+    .rsvp-box .rsvp-icon { font-size: 48px; margin-bottom: 16px; }
+    .rsvp-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .rsvp-box p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .rsvp-box .rsvp-close-btn {
+      margin-top: 24px;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .rsvp-box .rsvp-close-btn:hover { opacity: 0.82; }
+
     /* ── SCROLL INDICATOR ── */
     .scroll-indicator {
       margin-top: 32px;
@@ -693,6 +793,7 @@
         <span class="cd-label">Sek</span>
       </div>
     </div>
+    <div class="rsvp-confirmed-list" id="next-rsvp" style="display:none"></div>
   </div>
   <div class="scroll-indicator" aria-hidden="true">
     <span></span>
@@ -741,6 +842,15 @@
   </div>
 </div>
 
+<!-- RSVP MODAL -->
+<div id="rsvp-modal">
+  <div class="rsvp-box" id="rsvp-box-content">
+    <div class="rsvp-icon">⏳</div>
+    <h2>Bekræfter...</h2>
+    <p>Vent venligst</p>
+  </div>
+</div>
+
 <!-- LOGIN MODAL -->
 <div id="login-modal">
   <div class="login-box">
@@ -782,6 +892,7 @@ let DINNERS = (function() {
       // Soft migration: ensure every entry has all expected fields
       return parsed.map(d => ({
         location: '',
+        rsvp: null,
         ...d,
         chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
       }));
@@ -843,6 +954,23 @@ function renderHero() {
   document.getElementById('chef2').textContent = next.chefs[1];
   const locEl = document.getElementById('next-location');
   locEl.textContent = next.location ? '🏠 Hos ' + next.location : '';
+
+  // RSVP-bekræftede under nedtælling
+  const rsvpEl = document.getElementById('next-rsvp');
+  if (rsvpEl) {
+    if (next.rsvp) {
+      const confirmed = Object.keys(next.rsvp).filter(n => next.rsvp[n].status === 'confirmed');
+      const total = Object.keys(next.rsvp).length;
+      if (confirmed.length > 0) {
+        rsvpEl.innerHTML = `<strong>Tilmeldte (${confirmed.length}/${total}):</strong> ${confirmed.map(n => esc(n)).join(' · ')}`;
+        rsvpEl.style.display = '';
+      } else {
+        rsvpEl.style.display = 'none';
+      }
+    } else {
+      rsvpEl.style.display = 'none';
+    }
+  }
 }
 
 // ── COUNTDOWN ────────────────────────────────────────────────────────
@@ -885,6 +1013,20 @@ function renderSchedule() {
           <button class="edit-cancel-btn" onclick="cancelEdit()">✕</button>
         </div>`;
       } else {
+        const rsvpPanel = isAdmin && !past && d.rsvp ? (function() {
+          const statusIcon = { confirmed: '✓', declined: '✗', pending: '–' };
+          const chips = Object.entries(d.rsvp).map(([name, entry]) =>
+            `<span class="rsvp-chip ${entry.status}">${statusIcon[entry.status] || '–'} ${esc(name)}</span>`
+          ).join('');
+          return `<div class="rsvp-panel">
+            <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">RSVP</div>
+            <div class="rsvp-chips">${chips}</div>
+            <button class="rsvp-reset-btn" onclick="resetRsvp('${esc(d.date)}')">↺ Nulstil</button>
+          </div>`;
+        })() : '';
+        const rsvpSendBtn = isAdmin && !past && !d.rsvp
+          ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
+          : '';
         html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
           <div class="dr-date">${formatShort(d.date)}</div>
           <div class="dr-chefs">
@@ -895,7 +1037,9 @@ function renderSchedule() {
           ${d.location ? `<span class="dr-location">🏠 ${esc(d.location)}</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
-        </div>`;
+        </div>
+        ${rsvpPanel}
+        ${rsvpSendBtn}`;
       }
     }
     html += `</div>`;
@@ -931,7 +1075,7 @@ function saveDinnerEdit(idx) {
   const chef2    = document.getElementById(`edit-chef2-${idx}`).value.trim();
   const location = document.getElementById(`edit-loc-${idx}`).value.trim();
   if (!date || !chef1 || !chef2) return;
-  DINNERS[idx] = { date, chefs: [chef1, chef2], location };
+  DINNERS[idx] = { date, chefs: [chef1, chef2], location, rsvp: DINNERS[idx].rsvp || null };
   saveDinners();
   editingIndex = -1;
   renderHero();
@@ -960,6 +1104,98 @@ function saveNewDinner() {
   addingDinner = false;
   renderHero();
   renderSchedule();
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────
+async function sendRsvp(dinnerDate) {
+  if (!confirm(`Sende RSVP-invitationer til alle 10 medlemmer for middagen den ${formatShort(dinnerDate)}?`)) return;
+  try {
+    const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_rsvp', dinnerDate }) });
+    const data = await res.json();
+    if (data.ok) {
+      const failMsg = data.failed && data.failed.length ? `\nMislykkedes: ${data.failed.join(', ')} (udfyld email i api.php)` : '';
+      alert(`✓ Sendt til ${data.sent} medlemmer.${failMsg}`);
+      await syncRsvpFromServer();
+    } else {
+      alert('Fejl: ' + (data.error || 'Ukendt fejl'));
+    }
+  } catch(e) {
+    alert('Netværksfejl — prøv igen');
+  }
+}
+
+async function resetRsvp(dinnerDate) {
+  if (!confirm(`Nulstil RSVP for middagen den ${formatShort(dinnerDate)}? Alle svar slettes.`)) return;
+  try {
+    const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: ADMIN_CODE, action: 'reset_rsvp', dinnerDate }) });
+    const data = await res.json();
+    if (data.ok) {
+      await syncRsvpFromServer();
+    } else {
+      alert('Fejl: ' + (data.error || 'Ukendt fejl'));
+    }
+  } catch(e) {
+    alert('Netværksfejl — prøv igen');
+  }
+}
+
+async function syncRsvpFromServer() {
+  try {
+    const res = await fetch('api.php');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+    DINNERS = data.map(d => ({ location: '', rsvp: null, ...d, chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''] }));
+    localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+    renderHero();
+    renderSchedule();
+  } catch(e) {}
+}
+
+function showRsvpOverlay(rsvpToken, svar) {
+  const modal = document.getElementById('rsvp-modal');
+  const box   = document.getElementById('rsvp-box-content');
+  modal.style.display = 'flex';
+  box.innerHTML = `<div class="rsvp-icon">⏳</div><h2>Bekræfter...</h2><p>Vent venligst</p>`;
+
+  fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'rsvp_confirm', rsvpToken, svar }) })
+  .then(r => r.json())
+  .then(data => {
+    history.replaceState(null, '', window.location.pathname);
+    if (data.ok) {
+      const affirm  = svar === 'nej' ? 'afmeldt' : 'bekræftet';
+      const icon    = svar === 'nej' ? '😢' : '🎉';
+      const heading = svar === 'nej' ? 'Afmelding registreret' : 'Vi ses til Madklubben!';
+      const dateStr = data.date ? ` den ${formatShort(data.date)}` : '';
+      box.innerHTML = `
+        <div class="rsvp-icon">${icon}</div>
+        <h2>${heading}</h2>
+        <p>Hej ${esc(data.name)},<br>din ${affirm} er registreret${dateStr}.</p>
+        <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+      syncRsvpFromServer();
+    } else {
+      box.innerHTML = `
+        <div class="rsvp-icon">❌</div>
+        <h2>Ugyldigt link</h2>
+        <p>${esc(data.error || 'Dette link er ikke gyldigt eller er allerede brugt.')}</p>
+        <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+    }
+  })
+  .catch(() => {
+    history.replaceState(null, '', window.location.pathname);
+    box.innerHTML = `
+      <div class="rsvp-icon">⚠️</div>
+      <h2>Netværksfejl</h2>
+      <p>Kunne ikke nå serveren. Prøv at klikke linket i emailen igen.</p>
+      <button class="rsvp-close-btn" onclick="closeRsvpModal()">Luk</button>`;
+  });
+}
+
+function closeRsvpModal() {
+  document.getElementById('rsvp-modal').style.display = 'none';
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
@@ -1046,6 +1282,14 @@ renderMembers();
 tick();
 setInterval(tick, 1000);
 
+(function handleRsvpLink() {
+  const params     = new URLSearchParams(window.location.search);
+  const rsvpToken  = params.get('rsvp');
+  if (!rsvpToken) return;
+  const svar = params.get('svar') || 'ja';
+  showRsvpOverlay(rsvpToken, svar);
+})();
+
 (async function syncFromServer() {
   try {
     const res = await fetch('api.php');
@@ -1054,6 +1298,7 @@ setInterval(tick, 1000);
     if (!Array.isArray(data) || data.length === 0) return;
     DINNERS = data.map(d => ({
       location: '',
+      rsvp: null,
       ...d,
       chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
     }));
