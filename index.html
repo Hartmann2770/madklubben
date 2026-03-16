@@ -150,10 +150,21 @@
       transform: translateX(-50%);
       background: #111111;
       color: #c8860a;
-      padding: 2px 14px;
-      font-size: 18px;
-      letter-spacing: 8px;
+      padding: 3px 14px;
+      font-size: 16px;
+      letter-spacing: 6px;
       border-radius: 8px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ornament-num {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #e8a020;
     }
     .next-eyebrow {
       font-size: 12px;
@@ -796,6 +807,8 @@
       /* Hero */
       .hero-sub { margin-bottom: 32px; }
       .next-card { padding: 28px 20px; }
+      .next-card-ornament { font-size: 13px; padding: 3px 10px; gap: 4px; }
+      .ornament-num { font-size: 11px; }
       .next-date-text { font-size: 18px; }
       .chef-name { font-size: 19px; }
       .cd-num { font-size: 30px; }
@@ -858,12 +871,12 @@
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-eyebrow">Venner &middot; Mad &middot; Vin</div>
+  <div class="hero-eyebrow" id="hero-eyebrow">Venner &middot; Mad &middot; Vin</div>
   <h1 class="hero-title">Madklubben</h1>
   <p class="hero-sub"><em>man skulle nok have været der...</em></p>
 
   <div class="next-card">
-    <div class="next-card-ornament">★ ★ ★</div>
+    <div class="next-card-ornament" id="next-card-ornament">★ ★ ★</div>
     <div class="next-eyebrow" id="next-eyebrow">Næste madklub</div>
     <div class="next-date-text" id="next-date-text">—</div>
     <div class="next-location" id="next-location"></div>
@@ -1021,6 +1034,8 @@ let isAdmin = false;
 let editingIndex = -1;
 let addingDinner = false;
 
+const FOUNDED_YEAR = 2002; // giver 24 år i 2026, 25 i 2027 (bekræftet af Simon)
+
 // ── HELPERS ──────────────────────────────────────────────────────────
 function isPast(dateStr) {
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1037,6 +1052,13 @@ function formatShort(dateStr) {
 }
 function getNext() {
   return DINNERS.find(d => !isPast(d.date)) || null;
+}
+function getStats() {
+  const years  = new Date().getFullYear() - FOUNDED_YEAR;
+  const sorted = [...DINNERS].sort((a, b) => a.date.localeCompare(b.date));
+  const last   = [...sorted].reverse().find(d => isPast(d.date));
+  const count  = last ? getDinnerNumber(last) : 0;
+  return { count, years };
 }
 async function saveDinners() {
   localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
@@ -1059,13 +1081,32 @@ function chefHtml(name) {
 function renderHero() {
   const next = getNext();
   if (!next) return;
-  const num = getDinnerNumber(next);
-  document.getElementById('next-eyebrow').textContent = `Madklub #${num} · Næste`;
+  const num   = getDinnerNumber(next);
+  const stats = getStats();
+
+  // Statistik-eyebrow
+  document.getElementById('hero-eyebrow').textContent =
+    `${stats.count} Madklubber · ${stats.years} år`;
+
+  // Ornament: ★★★ Madklub #67 ★★★
+  document.getElementById('next-card-ornament').innerHTML =
+    `★ ★ ★<span class="ornament-num">Madklub #${num}</span>★ ★ ★`;
+
+  // Fjern gammel next-eyebrow tekst (tallet er nu i ornamentet)
+  document.getElementById('next-eyebrow').textContent = 'Næste madklub';
+
   document.getElementById('next-date-text').textContent = formatLong(next.date);
-  document.getElementById('chef1').textContent = next.chefs[0];
-  document.getElementById('chef2').textContent = next.chefs[1];
+  document.getElementById('chef1').innerHTML = '🧑‍🍳 ' + esc(next.chefs[0]);
+  document.getElementById('chef2').innerHTML = '🧑‍🍳 ' + esc(next.chefs[1]);
+
   const locEl = document.getElementById('next-location');
-  locEl.textContent = next.location ? '🏠 Hos ' + next.location : '';
+  if (next.location) {
+    locEl.textContent = '🏠 Hos ' + next.location;
+    locEl.style.opacity = '';
+  } else {
+    locEl.textContent = 'Sted TBD';
+    locEl.style.opacity = '0.45';
+  }
 
   // RSVP-oversigt — synlig for alle
   const rsvpEl = document.getElementById('next-rsvp');
@@ -1078,12 +1119,14 @@ function renderHero() {
       if (confirmed.length) parts.push(`<strong>Kommer (${confirmed.length})${isAdmin ? ':' : ''}</strong>${isAdmin ? ' ' + confirmed.map(n => esc(n)).join(' · ') : ''}`);
       if (declined.length)  parts.push(`<strong>Kan ikke (${declined.length})${isAdmin ? ':' : ''}</strong>${isAdmin ? ' ' + declined.map(n => esc(n)).join(' · ') : ''}`);
       if (pending.length)   parts.push(`<span style="color:var(--muted)">(${pending.length}) mangler svar</span>`);
-      if (parts.length) {
-        rsvpEl.innerHTML = parts.join('<br>');
-        rsvpEl.style.display = '';
-      } else {
-        rsvpEl.style.display = 'none';
-      }
+      // RSVP-deadline: 3 dage før middagen
+      const dl = new Date(next.date + 'T00:00:00');
+      dl.setDate(dl.getDate() - 3);
+      const dlStr = dl.toLocaleDateString('da-DK', { day: 'numeric', month: 'long' });
+      parts.push(`<span style="color:var(--muted);font-size:12px;opacity:0.8">Svar senest: ${dlStr}</span>`);
+
+      rsvpEl.innerHTML = parts.join('<br>');
+      rsvpEl.style.display = '';
     } else {
       rsvpEl.style.display = 'none';
     }
@@ -1212,7 +1255,9 @@ function renderSchedule() {
             <span class="dr-amp">&amp;</span>
             <span class="dr-chef">${chefHtml(d.chefs[1])}</span>
           </div>
-          ${d.location ? `<span class="dr-location">🏠 ${esc(d.location)}</span>` : ''}
+          ${d.location
+              ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
+              : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>

@@ -137,8 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
                 $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
+                $deadline   = (new DateTime($dinnerDate))->modify('-3 days')->format('d/m/Y');
                 $subject    = "Invitation til Madklub #{$dinnerNumber} den $dateFormatted";
-                $message    = "Hej $name,\n\nDu er inviteret til Madklub #{$dinnerNumber} den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSes der!\nMadklubben";
+                $message    = "Hej $name,\n\nDu er inviteret til Madklub #{$dinnerNumber} den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
 
                 if (mail($email, $subject, $message, $headers)) {
                     $sent++;
@@ -195,8 +196,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
                 $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
+                $deadline   = (new DateTime($dinnerDate))->modify('-3 days')->format('d/m/Y');
                 $subject    = "Påmindelse: Svar på invitation til Madklubben den $dateFormatted";
-                $message    = "Hej $name,\n\nVi mangler stadig dit svar på Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSes der!\nMadklubben";
+                $message    = "Hej $name,\n\nVi mangler stadig dit svar på Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
                 if (mail($email, $subject, $message, $headers)) {
                     $sent++;
                 } else {
