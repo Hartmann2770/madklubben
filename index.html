@@ -929,9 +929,10 @@
   <div id="test-panel">
     <div id="test-panel-label">Test nedtælling</div>
     <div class="test-btns">
-      <button class="test-btn active" id="test-btn-normal"  onclick="setTestMode(null)">Normal</button>
-      <button class="test-btn"        id="test-btn-warning" onclick="setTestMode('warning')">⚠️ Advarsel</button>
-      <button class="test-btn"        id="test-btn-live"    onclick="setTestMode('live')">🍷 I gang</button>
+      <button class="test-btn active" id="test-btn-normal"      onclick="setTestMode('normal')">Normal</button>
+      <button class="test-btn"        id="test-btn-to-warning"  onclick="setTestMode('to-warning')">→ ⚠️ Advarsel</button>
+      <button class="test-btn"        id="test-btn-to-live"     onclick="setTestMode('to-live')">→ 🍷 I gang</button>
+      <button class="test-btn"        id="test-btn-live"        onclick="setTestMode('live')">🍷 I gang</button>
     </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true" onclick="document.getElementById('program').scrollIntoView({behavior:'smooth'})">
@@ -1129,13 +1130,29 @@ function renderHero() {
 }
 
 // ── COUNTDOWN ────────────────────────────────────────────────────────
-let testMode = null; // null | 'warning' | 'live'
+let testOffset = 0; // ms offset der forskydes realtiden i test-tilstand
 
 function setTestMode(mode) {
-  testMode = mode;
-  ['normal','warning','live'].forEach(m => {
+  const next = getNext();
+  const target = next ? new Date(next.date + 'T18:00:00').getTime() : Date.now();
+  const now = Date.now();
+
+  if (mode === 'to-warning') {
+    // Sæt effektiv tid til 10 min 10 sek før middag — ser overgangen om ~10 sek
+    testOffset = (target - 10 * 60 * 1000 - 10 * 1000) - now;
+  } else if (mode === 'to-live') {
+    // Sæt effektiv tid til 10 sek før middag — ser overgangen om ~10 sek
+    testOffset = (target - 10 * 1000) - now;
+  } else if (mode === 'live') {
+    // Sæt effektiv tid til 2 min inde i middagen
+    testOffset = (target + 2 * 60 * 1000) - now;
+  } else {
+    testOffset = 0; // Normal: real time
+  }
+
+  ['normal','to-warning','to-live','live'].forEach(m => {
     const b = document.getElementById('test-btn-' + m);
-    if (b) b.classList.toggle('active', (mode === null ? 'normal' : mode) === m);
+    if (b) b.classList.toggle('active', m === mode);
   });
   tick();
 }
@@ -1144,9 +1161,8 @@ function tick() {
   const next = getNext();
   if (!next) return;
 
-  let diff = new Date(next.date + 'T18:00:00') - Date.now();
-  if (testMode === 'warning') diff = 5 * 60 * 1000;        // simuler 5 min til
-  if (testMode === 'live')    diff = -(90 * 60 * 1000);    // simuler 1.5 t inde i middag
+  const effectiveNow = Date.now() + testOffset;
+  let diff = new Date(next.date + 'T18:00:00') - effectiveNow;
 
   const card     = document.querySelector('.next-card');
   const statusEl = document.getElementById('cd-status');
@@ -1181,7 +1197,7 @@ function tick() {
     // ── Advarsel: sidste 10 minutter ─────────────────────────────
     card.classList.add('countdown-warning');
     card.classList.remove('countdown-live');
-    if (statusEl) statusEl.innerHTML = '<div class="cd-warning-msg">🍺 Skynd dig — ølstraf venter!</div>';
+    if (statusEl) statusEl.innerHTML = '<div class="cd-warning-msg">🍺 Skynd dig — ølstraf venter! 🍺</div>';
     showMinsOnly();
     const m = Math.floor(diff / 60000);
     const s = Math.floor(diff % 60000 / 1000);
@@ -1458,7 +1474,7 @@ function updateLoginBtn() {
   btn.classList.toggle('active', isAdmin);
   document.getElementById('msg-btn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('test-panel').style.display = isAdmin ? 'flex' : 'none';
-  if (!isAdmin) { testMode = null; }
+  if (!isAdmin) { testOffset = 0; setTestMode('normal'); }
 }
 
 function openMsg() {
