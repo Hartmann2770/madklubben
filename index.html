@@ -1132,7 +1132,7 @@
 
 <nav>
   <div class="nav-inner">
-    <div class="nav-logo" onclick="scrollTo({top:0,behavior:'smooth'})">
+    <div class="nav-logo" onclick="document.getElementById('dinner-detail').style.display!=='none'?goBack():scrollTo({top:0,behavior:'smooth'})">
       <img src="assets/manden.jpg" alt="Madklubben logo" class="nav-logo-img">
       <span class="nav-logo-text">Madklubben</span>
     </div>
