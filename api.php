@@ -14,9 +14,9 @@ $token = 'TMK04';
 
 function sendMail(string $to, string $subject, string $body): bool {
     require_once __DIR__ . '/config.php';
-    require_once __DIR__ . '/phpmailer/src/Exception.php';
-    require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
-    require_once __DIR__ . '/phpmailer/src/SMTP.php';
+    require_once __DIR__ . '/phpmailer/Exception.php';
+    require_once __DIR__ . '/phpmailer/PHPMailer.php';
+    require_once __DIR__ . '/phpmailer/SMTP.php';
 
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
     try {
