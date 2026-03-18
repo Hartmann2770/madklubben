@@ -11,7 +11,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
 
 $file  = __DIR__ . '/dinners.json';
 $token = 'TMK04';
-$from  = 'Madklubben <simon@madklubben.com>';
+
+// SMTP-konfiguration fra config.php (ikke på GitHub)
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/phpmailer/src/Exception.php';
+require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/phpmailer/src/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+function sendMail(string $to, string $subject, string $body): bool {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = SMTP_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USER;
+        $mail->Password   = SMTP_PASS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port       = SMTP_PORT;
+        $mail->CharSet    = 'UTF-8';
+        $mail->setFrom(SMTP_USER, 'Madklubben');
+        $mail->addAddress($to);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        return false;
+    }
+}
 
 // Medlemsregister — udfyld manglende emailadresser
 $members = [
@@ -204,13 +235,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
             $dinnerNumber  = isset($body['dinnerNumber']) ? intval($body['dinnerNumber']) : '?';
 
-            ini_set('sendmail_from', 'simon@madklubben.com');
-            $headers  = "From: $from\r\n";
-            $headers .= "Reply-To: simon@madklubben.com\r\n";
-            $headers .= "Sender: simon@madklubben.com\r\n";
-            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-            $headers .= "MIME-Version: 1.0\r\n";
-
             $failed = [];
             $sent   = 0;
             foreach ($rsvpMap as $name => $entry) {
@@ -225,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $subject    = "Invitation til Madklub #{$dinnerNumber} den $dateFormatted";
                 $message    = "Hej $name,\n\nDu er inviteret til Madklub #{$dinnerNumber} den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
 
-                if (mail($email, $subject, $message, $headers)) {
+                if (sendMail($email, $subject, $message)) {
                     $sent++;
                 } else {
                     $failed[] = $name;
@@ -262,13 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $chefs         = implode(' & ', $dinner['chefs'] ?? []);
             $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
 
-            ini_set('sendmail_from', 'simon@madklubben.com');
-            $headers  = "From: $from\r\n";
-            $headers .= "Reply-To: simon@madklubben.com\r\n";
-            $headers .= "Sender: simon@madklubben.com\r\n";
-            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-            $headers .= "MIME-Version: 1.0\r\n";
-
             $failed = [];
             $sent   = 0;
             foreach ($dinner['rsvp'] as $name => $entry) {
@@ -283,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $deadline   = (new DateTime($dinnerDate))->modify('-3 days')->format('d/m/Y');
                 $subject    = "Påmindelse: Svar på invitation til Madklubben den $dateFormatted";
                 $message    = "Hej $name,\n\nVi mangler stadig dit svar på Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
-                if (mail($email, $subject, $message, $headers)) {
+                if (sendMail($email, $subject, $message)) {
                     $sent++;
                 } else {
                     $failed[] = $name;
@@ -368,16 +385,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        ini_set('sendmail_from', 'simon@madklubben.com');
-        $headers  = "From: $from\r\n";
-        $headers .= "Reply-To: simon@madklubben.com\r\n";
-        $headers .= "Sender: simon@madklubben.com\r\n";
-        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        $headers .= "MIME-Version: 1.0\r\n";
-
         $failed = [];
         foreach ($recipients as $to) {
-            if (!mail($to, $subject, $message, $headers)) {
+            if (!sendMail($to, $subject, $message)) {
                 $failed[] = $to;
             }
         }
