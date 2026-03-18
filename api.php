@@ -40,6 +40,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 // ── POST ─────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // ── Multipart (fil-upload) ────────────────────────────────────────
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (strpos($contentType, 'multipart/form-data') !== false) {
+        $postToken = $_POST['token'] ?? '';
+        if ($postToken !== $token) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+        $action = $_POST['action'] ?? '';
+
+        if ($action === 'upload_dinner_image') {
+            $dinnerDate   = trim($_POST['dinnerDate'] ?? '');
+            $dinnerNumber = intval($_POST['dinnerNumber'] ?? 0);
+            $imgType      = trim($_POST['type'] ?? '');
+
+            $allowedTypes = ['foret', 'hoved', 'dessert', 'gruppe'];
+            if (!in_array($imgType, $allowedTypes) || !$dinnerDate || !$dinnerNumber) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Ugyldige parametre']);
+                exit;
+            }
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Fil mangler eller fejl ved upload']);
+                exit;
+            }
+            $uploadedFile = $_FILES['image'];
+            $mime = mime_content_type($uploadedFile['tmp_name']);
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!in_array($mime, $allowedMimes)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Kun billedfiler er tilladt (jpg, png, webp, gif)']);
+                exit;
+            }
+            $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+            $ext = $extMap[$mime] ?? 'jpg';
+
+            $dir = __DIR__ . "/billeder/madklub-{$dinnerNumber}";
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+            // Slet evt. gammel version med anden extension
+            foreach (['jpg', 'png', 'webp', 'gif'] as $oldExt) {
+                $oldPath = "{$dir}/{$imgType}.{$oldExt}";
+                if (file_exists($oldPath)) unlink($oldPath);
+            }
+
+            $filename = "{$imgType}.{$ext}";
+            $dest     = "{$dir}/{$filename}";
+
+            if (!move_uploaded_file($uploadedFile['tmp_name'], $dest)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Kunne ikke gemme filen på serveren']);
+                exit;
+            }
+
+            $path = "billeder/madklub-{$dinnerNumber}/{$filename}";
+
+            // Opdater dinners.json
+            $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+            foreach ($dinners as &$d) {
+                if ($d['date'] !== $dinnerDate) continue;
+                if (!isset($d['detaljer'])) $d['detaljer'] = [];
+                if ($imgType === 'gruppe') {
+                    $d['detaljer']['gruppe'] = $path;
+                } else {
+                    if (!isset($d['detaljer'][$imgType])) $d['detaljer'][$imgType] = [];
+                    $d['detaljer'][$imgType]['billede'] = $path;
+                }
+                break;
+            }
+            unset($d);
+            file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+            echo json_encode(['ok' => true, 'path' => $path]);
+            exit;
+        }
+
+        http_response_code(400);
+        echo json_encode(['error' => 'Ukendt action']);
+        exit;
+    }
+
     $body = json_decode(file_get_contents('php://input'), true);
 
     // ── RSVP Confirm (kræver IKKE admin-token) ────────────────────────
@@ -210,6 +294,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         http_response_code(404);
         echo json_encode(['error' => 'Middag ikke fundet']);
+        exit;
+    }
+
+    // ── Save dinner detail (tekst) ────────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'save_dinner_detail') {
+        $dinnerDate = trim($body['dinnerDate'] ?? '');
+        $detaljer   = $body['detaljer'] ?? [];
+        if (!$dinnerDate) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Manglende dinnerDate']);
+            exit;
+        }
+        $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+        $found = false;
+        foreach ($dinners as &$d) {
+            if ($d['date'] !== $dinnerDate) continue;
+            if (!isset($d['detaljer'])) $d['detaljer'] = [];
+            // Kun tekst-felter opdateres (billeder styres via upload_dinner_image)
+            foreach (['foret', 'hoved', 'dessert'] as $type) {
+                if (isset($detaljer[$type]['tekst'])) {
+                    if (!isset($d['detaljer'][$type])) $d['detaljer'][$type] = [];
+                    $d['detaljer'][$type]['tekst'] = $detaljer[$type]['tekst'];
+                }
+            }
+            $found = true;
+            break;
+        }
+        unset($d);
+        if (!$found) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Middag ikke fundet']);
+            exit;
+        }
+        file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        echo json_encode(['ok' => true]);
         exit;
     }
 

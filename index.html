@@ -845,6 +845,240 @@
     @media (hover: none) {
       .edit-btn { opacity: 0.55; }
     }
+
+    /* ── DINNER DETAIL VIEW ── */
+    .dinner-detail-view {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: calc(90px + env(safe-area-inset-top)) 24px 80px;
+    }
+    .detail-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 36px;
+      transition: color 0.2s;
+    }
+    .detail-back-btn:hover { color: var(--accent); }
+    .detail-ornament {
+      display: inline-block;
+      background: #111111;
+      color: #c8860a;
+      padding: 4px 18px;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    .detail-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(22px, 4vw, 34px);
+      color: var(--accent);
+      margin-bottom: 8px;
+      text-transform: capitalize;
+    }
+    .detail-meta {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .detail-cta-banner {
+      background: var(--accent);
+      color: #f6f3ee;
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .detail-cta-icon { font-size: 36px; flex-shrink: 0; }
+    .detail-cta-text h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .detail-cta-text p { font-size: 13px; opacity: 0.72; }
+    .detail-section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .detail-group-section { margin-bottom: 56px; }
+    .group-img-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .group-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .group-img-replace {
+      position: absolute;
+      bottom: 12px; right: 12px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .group-img-wrap:hover .group-img-replace { opacity: 1; }
+    .group-img-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      aspect-ratio: 16/9;
+      gap: 12px;
+      cursor: pointer;
+      padding: 24px;
+      text-align: center;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface-raised);
+    }
+    .group-img-cta:hover { border-color: var(--accent); background: rgba(0,0,0,0.02); }
+    .group-img-cta-icon { font-size: 40px; opacity: 0.35; }
+    .group-img-cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .group-img-cta-sub { font-size: 13px; color: var(--muted); }
+    .detail-courses {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .course-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .course-card-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 16px 8px;
+    }
+    .course-img-wrap {
+      width: 100%;
+      aspect-ratio: 4/3;
+      position: relative;
+      overflow: hidden;
+      background: var(--surface-raised);
+    }
+    .course-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .course-img-replace {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .course-img-wrap:hover .course-img-replace { opacity: 1; }
+    .course-img-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      aspect-ratio: 4/3;
+      gap: 8px;
+      cursor: pointer;
+      padding: 16px;
+      text-align: center;
+      border: 2px dashed var(--border);
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface-raised);
+    }
+    .course-img-cta:hover { border-color: var(--accent); background: rgba(0,0,0,0.02); }
+    .course-img-cta-icon { font-size: 24px; opacity: 0.4; }
+    .course-img-cta-text { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .course-card-body { padding: 10px 14px 14px; }
+    .course-textarea {
+      width: 100%;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      min-height: 64px;
+      transition: border-color 0.2s;
+    }
+    .course-textarea:focus { border-color: var(--accent); }
+    .course-save-btn {
+      margin-top: 8px;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .course-save-btn:hover { opacity: 0.8; }
+    .dinner-row.admin-clickable { cursor: pointer; }
+    .dr-photo-badge {
+      font-size: 13px;
+      opacity: 0.22;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .dinner-row.admin-clickable:hover .dr-photo-badge { opacity: 0.65; }
+    .dr-photo-badge.has-photos { opacity: 0.85; }
+    .detail-hidden-input { display: none; }
+    @media (max-width: 600px) {
+      .dinner-detail-view { padding: calc(76px + env(safe-area-inset-top)) 16px 60px; }
+      .detail-courses { grid-template-columns: 1fr; gap: 16px; }
+      .detail-cta-banner { flex-direction: column; padding: 20px 18px; text-align: center; }
+      .group-img-cta { aspect-ratio: 4/3; }
+    }
+    @media (hover: none) {
+      .group-img-replace, .course-img-replace { opacity: 0.8; }
+    }
   </style>
 </head>
 <body>
@@ -960,6 +1194,11 @@
   </div>
 </div>
 
+<!-- DINNER DETAIL VIEW -->
+<div id="dinner-detail" style="display:none">
+  <div class="dinner-detail-view" id="dinner-detail-inner"></div>
+</div>
+
 <!-- LOGIN MODAL -->
 <div id="login-modal">
   <div class="login-box">
@@ -1002,6 +1241,7 @@ let DINNERS = (function() {
       return parsed.map(d => ({
         location: '',
         rsvp: null,
+        detaljer: null,
         ...d,
         chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
       }));
@@ -1239,7 +1479,8 @@ function renderSchedule() {
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
         const num = getDinnerNumber(d);
-        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''}">
+        const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.foret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${isAdmin ? 'admin-clickable' : ''}" ${isAdmin ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
@@ -1250,7 +1491,8 @@ function renderSchedule() {
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
-          ${isAdmin ? `<button class="edit-btn" onclick="startEdit(${idx})" title="Rediger">✎</button>` : ''}
+          ${isAdmin ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
+          ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>
         ${rsvpPanel}
         ${rsvpSendBtn}`;
@@ -1289,7 +1531,7 @@ function saveDinnerEdit(idx) {
   const chef2    = document.getElementById(`edit-chef2-${idx}`).value.trim();
   const location = document.getElementById(`edit-loc-${idx}`).value.trim();
   if (!date || !chef1 || !chef2) return;
-  DINNERS[idx] = { date, chefs: [chef1, chef2], location, rsvp: DINNERS[idx].rsvp || null };
+  DINNERS[idx] = { date, chefs: [chef1, chef2], location, rsvp: DINNERS[idx].rsvp || null, detaljer: DINNERS[idx].detaljer || null };
   saveDinners();
   editingIndex = -1;
   renderHero();
@@ -1312,7 +1554,7 @@ function saveNewDinner() {
   const chef2    = document.getElementById('new-chef2').value.trim();
   const location = document.getElementById('new-loc').value.trim();
   if (!date || !chef1 || !chef2) return;
-  DINNERS.push({ date, chefs: [chef1, chef2], location });
+  DINNERS.push({ date, chefs: [chef1, chef2], location, detaljer: null });
   DINNERS.sort((a, b) => a.date.localeCompare(b.date));
   saveDinners();
   addingDinner = false;
@@ -1386,7 +1628,7 @@ async function syncRsvpFromServer() {
     if (!res.ok) return;
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return;
-    DINNERS = data.map(d => ({ location: '', rsvp: null, ...d, chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''] }));
+    DINNERS = data.map(d => ({ location: '', rsvp: null, detaljer: null, ...d, chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''] }));
     localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
     renderHero();
     renderSchedule();
@@ -1447,7 +1689,14 @@ function closeRsvpModal() {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
 function openLogin() {
-  if (isAdmin) { isAdmin = false; editingIndex = -1; addingDinner = false; updateLoginBtn(); renderSchedule(); return; }
+  if (isAdmin) {
+    isAdmin = false; editingIndex = -1; addingDinner = false;
+    updateLoginBtn(); renderSchedule();
+    if (document.getElementById('dinner-detail').style.display !== 'none') {
+      window.location.hash = ''; showMainView();
+    }
+    return;
+  }
   document.getElementById('login-error').style.display = 'none';
   document.getElementById('login-input').value = '';
   document.getElementById('login-modal').style.display = 'flex';
@@ -1462,6 +1711,7 @@ function submitLogin() {
     closeLogin();
     updateLoginBtn();
     renderSchedule();
+    if (window.location.hash.startsWith('#middag-')) handleHash();
   } else {
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('login-input').select();
@@ -1521,6 +1771,203 @@ document.getElementById('login-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('login-modal')) closeLogin();
 });
 
+// ── DINNER DETAIL ────────────────────────────────────────────────────
+function openDinnerDetail(date) {
+  window.location.hash = '#middag-' + date;
+}
+
+function showDinnerDetail(dinner) {
+  document.querySelector('.hero').style.display = 'none';
+  document.querySelectorAll('.section-divider').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
+  document.querySelector('footer').style.display = 'none';
+  document.getElementById('dinner-detail').style.display = '';
+  document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
+  window.scrollTo(0, 0);
+}
+
+function showMainView() {
+  document.querySelector('.hero').style.display = '';
+  document.querySelectorAll('.section-divider').forEach(el => el.style.display = '');
+  document.querySelectorAll('.section').forEach(el => el.style.display = '');
+  document.querySelector('footer').style.display = '';
+  document.getElementById('dinner-detail').style.display = 'none';
+}
+
+function handleHash() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#middag-') && isAdmin) {
+    const date = decodeURIComponent(hash.slice('#middag-'.length));
+    const dinner = DINNERS.find(d => d.date === date);
+    if (dinner) { showDinnerDetail(dinner); return; }
+  }
+  showMainView();
+}
+window.addEventListener('hashchange', handleHash);
+
+function goBack() {
+  history.pushState('', document.title, window.location.pathname + '#program');
+  showMainView();
+  setTimeout(() => document.getElementById('program').scrollIntoView({ behavior: 'smooth' }), 50);
+}
+
+function renderDinnerDetail(dinner) {
+  const num  = getDinnerNumber(dinner);
+  const det  = dinner.detaljer || {};
+  const past = isPast(dinner.date);
+  const hasAnyContent = det.gruppe || det.foret?.billede || det.hoved?.billede || det.dessert?.billede
+    || det.foret?.tekst || det.hoved?.tekst || det.dessert?.tekst;
+
+  const ctaBanner = past && !hasAnyContent ? `
+    <div class="detail-cta-banner">
+      <div class="detail-cta-icon">📸</div>
+      <div class="detail-cta-text">
+        <h3>Dokumentér Madklub #${num}</h3>
+        <p>Upload billeder og beskriv retterne — gem minderne fra aftenen for eftertiden</p>
+      </div>
+    </div>` : '';
+
+  function courseCard(type, label) {
+    const c = det[type] || {};
+    const imgHtml = c.billede
+      ? `<div class="course-img-wrap">
+           <img src="${esc(c.billede)}" alt="${label}">
+           <button class="course-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'${type}')">Udskift</button>
+         </div>`
+      : `<div class="course-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'${type}')">
+           <div class="course-img-cta-icon">📷</div>
+           <div class="course-img-cta-text">Upload billede<br>af ${label.toLowerCase()}</div>
+         </div>`;
+    return `<div class="course-card">
+      <div class="course-card-label">${label}</div>
+      ${imgHtml}
+      <div class="course-card-body">
+        <textarea class="course-textarea" id="txt-${type}-${esc(dinner.date)}" placeholder="Beskriv ${label.toLowerCase()}...">${esc(c.tekst || '')}</textarea>
+        <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','${type}',this)">Gem</button>
+      </div>
+    </div>`;
+  }
+
+  const groupHtml = det.gruppe
+    ? `<div class="group-img-wrap">
+         <img src="${esc(det.gruppe)}" alt="Holdet fra Madklub #${num}">
+         <button class="group-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">Udskift billede</button>
+       </div>`
+    : `<div class="group-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">
+         <div class="group-img-cta-icon">📸</div>
+         <div class="group-img-cta-title">Upload gruppebillede</div>
+         <div class="group-img-cta-sub">Fang holdet fra aftenen</div>
+       </div>`;
+
+  const chefs = dinner.chefs.map(c => esc(c)).join(' & ');
+  const loc   = dinner.location ? `<span>🏠 Hos ${esc(dinner.location)}</span>` : '';
+
+  return `
+    <button class="detail-back-btn" onclick="goBack()">← Tilbage til program</button>
+    <div><div class="detail-ornament">Madklub &nbsp;<span style="font-weight:700">N° ${num}</span></div></div>
+    <div class="detail-title">${formatLong(dinner.date)}</div>
+    <div class="detail-meta"><span>🧑‍🍳 ${chefs}</span>${loc}</div>
+    ${ctaBanner}
+    <div class="detail-group-section">
+      <div class="detail-section-label">Holdet</div>
+      ${groupHtml}
+    </div>
+    <div class="detail-section-label">Menuen</div>
+    <div class="detail-courses">
+      ${courseCard('foret', 'Forret')}
+      ${courseCard('hoved', 'Hovedret')}
+      ${courseCard('dessert', 'Dessert')}
+    </div>
+    <input type="file" id="up-foret"   class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'foret')">
+    <input type="file" id="up-hoved"   class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'hoved')">
+    <input type="file" id="up-dessert" class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'dessert')">
+    <input type="file" id="up-gruppe"  class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'gruppe')">
+  `;
+}
+
+function triggerUpload(date, num, type) {
+  document.getElementById('up-' + type).click();
+}
+
+async function compressImage(file) {
+  const MAX_BYTES = 2 * 1024 * 1024;
+  if (file.size <= MAX_BYTES) return file;
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_W = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.85);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleUpload(input, date, num, type) {
+  if (!input.files || !input.files[0]) return;
+  const raw  = input.files[0];
+  input.value = '';
+  const file = await compressImage(raw);
+  const form = new FormData();
+  form.append('token', ADMIN_CODE);
+  form.append('action', 'upload_dinner_image');
+  form.append('dinnerDate', date);
+  form.append('dinnerNumber', num);
+  form.append('type', type);
+  form.append('image', file);
+  try {
+    const res  = await fetch('api.php', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.ok) {
+      const dinner = DINNERS.find(d => d.date === date);
+      if (dinner) {
+        dinner.detaljer = dinner.detaljer || {};
+        if (type === 'gruppe') {
+          dinner.detaljer.gruppe = data.path;
+        } else {
+          dinner.detaljer[type] = dinner.detaljer[type] || {};
+          dinner.detaljer[type].billede = data.path;
+        }
+        localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+        document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
+      }
+    } else {
+      alert('Fejl ved upload: ' + (data.error || 'Ukendt fejl'));
+    }
+  } catch(e) {
+    alert('Netværksfejl — prøv igen');
+  }
+}
+
+async function saveDetailText(date, type, btn) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner) return;
+  const tekst = document.getElementById(`txt-${type}-${date}`)?.value.trim() || '';
+  dinner.detaljer = dinner.detaljer || {};
+  dinner.detaljer[type] = dinner.detaljer[type] || {};
+  dinner.detaljer[type].tekst = tekst;
+  localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+  try {
+    await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: ADMIN_CODE, action: 'save_dinner_detail', dinnerDate: date, detaljer: dinner.detaljer })
+    });
+  } catch(e) { /* offline */ }
+  btn.textContent = 'Gemt ✓';
+  setTimeout(() => { btn.textContent = 'Gem'; }, 1600);
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────
 // Render immediately with cached localStorage data, then sync from server
 renderHero();
@@ -1528,6 +1975,7 @@ renderSchedule();
 renderMembers();
 tick();
 setInterval(tick, 1000);
+handleHash();
 
 (function handleRsvpLink() {
   const params     = new URLSearchParams(window.location.search);
@@ -1546,6 +1994,7 @@ setInterval(tick, 1000);
     DINNERS = data.map(d => ({
       location: '',
       rsvp: null,
+      detaljer: null,
       ...d,
       chefs: Array.isArray(d.chefs) ? d.chefs : ['', ''],
     }));
