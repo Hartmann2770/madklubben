@@ -12,25 +12,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
 $file  = __DIR__ . '/dinners.json';
 $token = 'TMK04';
 
-// SMTP-konfiguration fra config.php (ikke på GitHub)
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/phpmailer/src/Exception.php';
-require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
-require_once __DIR__ . '/phpmailer/src/SMTP.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
 function sendMail(string $to, string $subject, string $body): bool {
-    $mail = new PHPMailer(true);
+    require_once __DIR__ . '/config.php';
+    require_once __DIR__ . '/phpmailer/src/Exception.php';
+    require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
+    require_once __DIR__ . '/phpmailer/src/SMTP.php';
+
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
     try {
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
         $mail->Username   = SMTP_USER;
         $mail->Password   = SMTP_PASS;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = SMTP_PORT;
         $mail->CharSet    = 'UTF-8';
         $mail->setFrom(SMTP_USER, 'Madklubben');
@@ -39,7 +34,7 @@ function sendMail(string $to, string $subject, string $body): bool {
         $mail->Body    = $body;
         $mail->send();
         return true;
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return false;
     }
 }
