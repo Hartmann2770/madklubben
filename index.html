@@ -1070,19 +1070,23 @@
     .dinner-row.admin-clickable:hover .dr-photo-badge { opacity: 0.65; }
     .dr-photo-badge.has-photos { opacity: 0.85; }
     .detail-hidden-input { display: none; }
-    .detail-text-view { position: relative; }
+    .detail-text-view { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .tema-content {
       font-family: 'Playfair Display', serif;
       font-style: italic;
       font-size: 17px;
       color: var(--text);
       line-height: 1.65;
+      flex: 1;
+      margin: 0;
     }
     .course-text-content {
       font-size: 13px;
       color: var(--text);
       line-height: 1.6;
       white-space: pre-wrap;
+      flex: 1;
+      margin: 0;
     }
     .detail-edit-icon {
       background: none;
@@ -1093,8 +1097,9 @@
       padding: 2px 5px;
       opacity: 0;
       transition: opacity 0.18s;
-      vertical-align: middle;
-      margin-left: 4px;
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 2px;
       border-radius: 4px;
     }
     .detail-text-view:hover .detail-edit-icon { opacity: 0.55; }
@@ -1309,6 +1314,7 @@ function getDinnerNumber(dinner) {
 let isAdmin = false;
 let editingIndex = -1;
 let addingDinner = false;
+let pendingDinnerDate = null;
 
 const FOUNDED_YEAR = 2002; // giver 24 år i 2026, 25 i 2027 (bekræftet af Simon)
 
@@ -1521,8 +1527,8 @@ function renderSchedule() {
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
         const num = getDinnerNumber(d);
-        const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.foret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
-        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${isAdmin ? 'admin-clickable' : ''}" ${isAdmin ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
+        const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} admin-clickable" onclick="openDinnerDetail('${esc(d.date)}')">
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
@@ -1753,7 +1759,13 @@ function submitLogin() {
     closeLogin();
     updateLoginBtn();
     renderSchedule();
-    if (window.location.hash.startsWith('#middag-')) handleHash();
+    if (pendingDinnerDate) {
+      const date = pendingDinnerDate;
+      pendingDinnerDate = null;
+      window.location.hash = '#middag-' + date;
+    } else if (window.location.hash.startsWith('#middag-')) {
+      handleHash();
+    }
   } else {
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('login-input').select();
@@ -1815,6 +1827,11 @@ document.getElementById('login-modal').addEventListener('click', e => {
 
 // ── DINNER DETAIL ────────────────────────────────────────────────────
 function openDinnerDetail(date) {
+  if (!isAdmin) {
+    pendingDinnerDate = date;
+    openLogin();
+    return;
+  }
   window.location.hash = '#middag-' + date;
 }
 
