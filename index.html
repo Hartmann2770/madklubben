@@ -1070,6 +1070,48 @@
     .dinner-row.admin-clickable:hover .dr-photo-badge { opacity: 0.65; }
     .dr-photo-badge.has-photos { opacity: 0.85; }
     .detail-hidden-input { display: none; }
+    .detail-text-view { position: relative; }
+    .tema-content {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 17px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .course-text-content {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .detail-edit-icon {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 5px;
+      opacity: 0;
+      transition: opacity 0.18s;
+      vertical-align: middle;
+      margin-left: 4px;
+      border-radius: 4px;
+    }
+    .detail-text-view:hover .detail-edit-icon { opacity: 0.55; }
+    .detail-edit-icon:hover { opacity: 1 !important; color: var(--accent); }
+    .detail-cancel-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    @media (hover: none) {
+      .detail-edit-icon { opacity: 0.5; }
+    }
     @media (max-width: 600px) {
       .dinner-detail-view { padding: calc(76px + env(safe-area-inset-top)) 16px 60px; }
       .detail-courses { grid-template-columns: 1fr; gap: 16px; }
@@ -1829,22 +1871,36 @@ function renderDinnerDetail(dinner) {
 
   function courseCard(type, label) {
     const c = det[type] || {};
+    const d = esc(dinner.date);
     const imgHtml = c.billede
       ? `<div class="course-img-wrap">
            <img src="${esc(c.billede)}" alt="${label}">
-           <button class="course-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'${type}')">Udskift</button>
+           <button class="course-img-replace" onclick="triggerUpload('${d}',${num},'${type}')">Udskift</button>
          </div>`
-      : `<div class="course-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'${type}')">
+      : `<div class="course-img-cta" onclick="triggerUpload('${d}',${num},'${type}')">
            <div class="course-img-cta-icon">📷</div>
            <div class="course-img-cta-text">Upload billede<br>af ${label.toLowerCase()}</div>
+         </div>`;
+    const textSection = c.tekst
+      ? `<div class="detail-text-view" id="view-${type}-${d}">
+           <p class="course-text-content">${esc(c.tekst)}</p>
+           <button class="detail-edit-icon" onclick="editField('${type}','${d}')" title="Rediger">✎</button>
+         </div>
+         <div id="edit-${type}-${d}" style="display:none">
+           <textarea class="course-textarea" id="txt-${type}-${d}">${esc(c.tekst)}</textarea>
+           <div style="display:flex;gap:8px;margin-top:8px">
+             <button class="course-save-btn" onclick="saveDetailText('${d}','${type}',this)">Gem</button>
+             <button class="detail-cancel-btn" onclick="cancelEditField('${type}','${d}')">Annuller</button>
+           </div>
+         </div>`
+      : `<div id="edit-${type}-${d}">
+           <textarea class="course-textarea" id="txt-${type}-${d}" placeholder="Beskriv ${label.toLowerCase()}..."></textarea>
+           <button class="course-save-btn" onclick="saveDetailText('${d}','${type}',this)" style="margin-top:8px">Gem</button>
          </div>`;
     return `<div class="course-card">
       <div class="course-card-label">${label}</div>
       ${imgHtml}
-      <div class="course-card-body">
-        <textarea class="course-textarea" id="txt-${type}-${esc(dinner.date)}" placeholder="Beskriv ${label.toLowerCase()}...">${esc(c.tekst || '')}</textarea>
-        <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','${type}',this)">Gem</button>
-      </div>
+      <div class="course-card-body">${textSection}</div>
     </div>`;
   }
 
@@ -1874,9 +1930,23 @@ function renderDinnerDetail(dinner) {
     </div>
     <div class="detail-section-label">Menuen</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px 16px;margin-bottom:28px">
-      <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Tema</div>
-      <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}" placeholder="Beskriv aftenens tema eller menu — fx 'Italiensk aften', 'Klassisk fransk med vinmenu'...">${esc(det.tema || '')}</textarea>
-      <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)">Gem</button>
+      <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Tema</div>
+      ${det.tema
+        ? `<div class="detail-text-view" id="view-tema-${esc(dinner.date)}">
+             <p class="tema-content">${esc(det.tema)}</p>
+             <button class="detail-edit-icon" onclick="editField('tema','${esc(dinner.date)}')" title="Rediger">✎</button>
+           </div>
+           <div id="edit-tema-${esc(dinner.date)}" style="display:none">
+             <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}">${esc(det.tema)}</textarea>
+             <div style="display:flex;gap:8px;margin-top:8px">
+               <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)">Gem</button>
+               <button class="detail-cancel-btn" onclick="cancelEditField('tema','${esc(dinner.date)}')">Annuller</button>
+             </div>
+           </div>`
+        : `<div id="edit-tema-${esc(dinner.date)}">
+             <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}" placeholder="Beskriv aftenens tema eller menu — fx 'Italiensk aften', 'Klassisk fransk med vinmenu'..."></textarea>
+             <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)" style="margin-top:8px">Gem</button>
+           </div>`}
     </div>
     <div class="detail-courses">
       ${courseCard('forret', 'Forretten')}
@@ -1954,6 +2024,18 @@ async function handleUpload(input, date, num, type) {
   }
 }
 
+function editField(type, date) {
+  document.getElementById(`view-${type}-${date}`).style.display = 'none';
+  const editEl = document.getElementById(`edit-${type}-${date}`);
+  editEl.style.display = '';
+  editEl.querySelector('textarea')?.focus();
+}
+
+function cancelEditField(type, date) {
+  document.getElementById(`view-${type}-${date}`).style.display = '';
+  document.getElementById(`edit-${type}-${date}`).style.display = 'none';
+}
+
 async function saveDetailText(date, type, btn) {
   const dinner = DINNERS.find(d => d.date === date);
   if (!dinner) return;
@@ -1973,8 +2055,10 @@ async function saveDetailText(date, type, btn) {
       body: JSON.stringify({ token: ADMIN_CODE, action: 'save_dinner_detail', dinnerDate: date, detaljer: dinner.detaljer })
     });
   } catch(e) { /* offline */ }
-  btn.textContent = 'Gemt ✓';
-  setTimeout(() => { btn.textContent = 'Gem'; }, 1600);
+  // Re-render detail ved nuværende scroll-position
+  const scrollY = window.scrollY;
+  document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
+  window.scrollTo(0, scrollY);
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
