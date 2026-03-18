@@ -279,6 +279,18 @@
       padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .year-heading:hover { opacity: 0.7; }
+    .year-toggle {
+      font-size: 10px;
+      opacity: 0.5;
+      letter-spacing: 0;
+      transition: transform 0.18s;
     }
     .dinner-row {
       display: flex;
@@ -1315,6 +1327,7 @@ let isAdmin = false;
 let editingIndex = -1;
 let addingDinner = false;
 let pendingDinnerDate = null;
+let collapsedYears = null; // initialiseres ved første renderSchedule
 
 const FOUNDED_YEAR = 2002; // giver 24 år i 2026, 25 i 2027 (bekræftet af Simon)
 
@@ -1488,10 +1501,19 @@ function renderSchedule() {
     const y = d.date.slice(0, 4);
     (byYear[y] = byYear[y] || []).push({ ...d, _idx: idx });
   });
+  // Initialiser kollapsede år: alt før indeværende år kollapseres som standard
+  if (collapsedYears === null) {
+    const thisYear = new Date().getFullYear().toString();
+    collapsedYears = new Set(Object.keys(byYear).filter(y => y < thisYear));
+  }
   let html = '';
   for (const [year, list] of Object.entries(byYear)) {
-    html += `<div class="year-block"><div class="year-heading">${year}</div>`;
-    for (const d of list) {
+    const isCollapsed = collapsedYears.has(year);
+    html += `<div class="year-block">
+      <div class="year-heading" onclick="toggleYear('${year}')">
+        ${year}<span class="year-toggle">${isCollapsed ? '▶' : '▾'}</span>
+      </div>`;
+    if (!isCollapsed) for (const d of list) {
       const past  = isPast(d.date);
       const isNxt = next && d.date === next.date;
       const idx   = d._idx;
@@ -1548,6 +1570,7 @@ function renderSchedule() {
     }
     html += `</div>`;
   }
+
   if (isAdmin) {
     if (addingDinner) {
       html += `<div class="dinner-add-row">
@@ -1563,6 +1586,12 @@ function renderSchedule() {
     }
   }
   document.getElementById('schedule').innerHTML = html;
+}
+
+function toggleYear(year) {
+  if (collapsedYears.has(year)) collapsedYears.delete(year);
+  else collapsedYears.add(year);
+  renderSchedule();
 }
 
 function startEdit(idx) {
