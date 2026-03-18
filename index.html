@@ -1375,12 +1375,12 @@ function renderHero() {
     `Madklub &nbsp;<span class="ornament-num">N° ${num}</span>`;
 
   document.getElementById('next-date-text').textContent = formatLong(next.date);
-  document.getElementById('chef1').innerHTML = '🧑‍🍳 ' + esc(next.chefs[0]);
-  document.getElementById('chef2').innerHTML = '🧑‍🍳 ' + esc(next.chefs[1]);
+  document.getElementById('chef1').textContent = next.chefs[0];
+  document.getElementById('chef2').textContent = next.chefs[1];
 
   const locEl = document.getElementById('next-location');
   if (next.location) {
-    locEl.textContent = '🏠 Hos ' + next.location;
+    locEl.textContent = 'Hos ' + next.location;
     locEl.style.opacity = '';
   } else {
     locEl.textContent = 'Sted TBD';
@@ -1933,7 +1933,7 @@ function renderDinnerDetail(dinner) {
        </div>`;
 
   const chefs = dinner.chefs.map(c => esc(c)).join(' & ');
-  const loc   = dinner.location ? `<span>🏠 Hos ${esc(dinner.location)}</span>` : '';
+  const loc   = dinner.location ? `<span>Hos ${esc(dinner.location)}</span>` : '';
 
   return `
     <button class="detail-back-btn" onclick="goBack()">← Tilbage til program</button>
