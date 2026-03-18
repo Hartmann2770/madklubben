@@ -41,15 +41,15 @@ function sendMail(string $to, string $subject, string $body): bool {
 
 // Medlemsregister — udfyld manglende emailadresser
 $members = [
-    'Heide'       => 'UDFYLD@example.com',
+    'Heide'       => 'heide@madklubben.com',
     'Hartmann'    => 'simonbirkhartmann@gmail.com',
     'Gjelsted'    => 'tuborgdrengen@hotmail.com',
-    'Thyregod'    => 'UDFYLD@example.com',
-    'Bisp'        => 'UDFYLD@example.com',
-    'Cronstjerne' => 'UDFYLD@example.com',
-    'Frøding'     => 'UDFYLD@example.com',
-    'Rifsdal'     => 'UDFYLD@example.com',
-    'Larsen'      => 'UDFYLD@example.com',
+    'Thyregod'    => 'thriller@mail.dk',
+    'Bisp'        => 'stefan_bisp@yahoo.dk',
+    'Cronstjerne' => 'lundeager@yahoo.dk',
+    'Frøding'     => 'mark@froeding.dk',
+    'Rifsdal'     => 'rifsdal@aol.com',
+    'Larsen'      => 'ebola112@yahoo.com',
     'Mekanikeren' => 'UDFYLD@example.com',
 ];
 
