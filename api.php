@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dinnerNumber = intval($_POST['dinnerNumber'] ?? 0);
             $imgType      = trim($_POST['type'] ?? '');
 
-            $allowedTypes = ['foret', 'hoved', 'dessert', 'gruppe'];
+            $allowedTypes = ['forret', 'hoved', 'dessert', 'gruppe'];
             if (!in_array($imgType, $allowedTypes) || !$dinnerDate || !$dinnerNumber) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Ugyldige parametre']);
@@ -312,11 +312,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($d['date'] !== $dinnerDate) continue;
             if (!isset($d['detaljer'])) $d['detaljer'] = [];
             // Kun tekst-felter opdateres (billeder styres via upload_dinner_image)
-            foreach (['foret', 'hoved', 'dessert'] as $type) {
+            foreach (['forret', 'hoved', 'dessert'] as $type) {
                 if (isset($detaljer[$type]['tekst'])) {
                     if (!isset($d['detaljer'][$type])) $d['detaljer'][$type] = [];
                     $d['detaljer'][$type]['tekst'] = $detaljer[$type]['tekst'];
                 }
+            }
+            if (array_key_exists('tema', $detaljer)) {
+                $d['detaljer']['tema'] = $detaljer['tema'];
             }
             $found = true;
             break;

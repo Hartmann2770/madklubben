@@ -1086,7 +1086,7 @@
 <nav>
   <div class="nav-inner">
     <div class="nav-logo" onclick="scrollTo({top:0,behavior:'smooth'})">
-      <img src="Billeder/manden.jpg" alt="Madklubben logo" class="nav-logo-img">
+      <img src="assets/manden.jpg" alt="Madklubben logo" class="nav-logo-img">
       <span class="nav-logo-text">Madklubben</span>
     </div>
     <div class="nav-links">
@@ -1815,8 +1815,8 @@ function renderDinnerDetail(dinner) {
   const num  = getDinnerNumber(dinner);
   const det  = dinner.detaljer || {};
   const past = isPast(dinner.date);
-  const hasAnyContent = det.gruppe || det.foret?.billede || det.hoved?.billede || det.dessert?.billede
-    || det.foret?.tekst || det.hoved?.tekst || det.dessert?.tekst;
+  const hasAnyContent = det.gruppe || det.forret?.billede || det.hoved?.billede || det.dessert?.billede
+    || det.forret?.tekst || det.hoved?.tekst || det.dessert?.tekst || det.tema;
 
   const ctaBanner = past && !hasAnyContent ? `
     <div class="detail-cta-banner">
@@ -1873,12 +1873,17 @@ function renderDinnerDetail(dinner) {
       ${groupHtml}
     </div>
     <div class="detail-section-label">Menuen</div>
-    <div class="detail-courses">
-      ${courseCard('foret', 'Forret')}
-      ${courseCard('hoved', 'Hovedret')}
-      ${courseCard('dessert', 'Dessert')}
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px 16px;margin-bottom:28px">
+      <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Tema</div>
+      <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}" placeholder="Beskriv aftenens tema eller menu — fx 'Italiensk aften', 'Klassisk fransk med vinmenu'...">${esc(det.tema || '')}</textarea>
+      <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)">Gem</button>
     </div>
-    <input type="file" id="up-foret"   class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'foret')">
+    <div class="detail-courses">
+      ${courseCard('forret', 'Forretten')}
+      ${courseCard('hoved', 'Hovedretten')}
+      ${courseCard('dessert', 'Desserten')}
+    </div>
+    <input type="file" id="up-forret"  class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'forret')">
     <input type="file" id="up-hoved"   class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'hoved')">
     <input type="file" id="up-dessert" class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'dessert')">
     <input type="file" id="up-gruppe"  class="detail-hidden-input" accept="image/*" onchange="handleUpload(this,'${esc(dinner.date)}',${num},'gruppe')">
@@ -1954,8 +1959,12 @@ async function saveDetailText(date, type, btn) {
   if (!dinner) return;
   const tekst = document.getElementById(`txt-${type}-${date}`)?.value.trim() || '';
   dinner.detaljer = dinner.detaljer || {};
-  dinner.detaljer[type] = dinner.detaljer[type] || {};
-  dinner.detaljer[type].tekst = tekst;
+  if (type === 'tema') {
+    dinner.detaljer.tema = tekst;
+  } else {
+    dinner.detaljer[type] = dinner.detaljer[type] || {};
+    dinner.detaljer[type].tekst = tekst;
+  }
   localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
   try {
     await fetch('api.php', {
