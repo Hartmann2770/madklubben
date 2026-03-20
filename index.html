@@ -1162,13 +1162,22 @@
     .course-save-btn:hover { opacity: 0.8; }
     .dinner-row.admin-clickable { cursor: pointer; }
     .dr-photo-badge {
-      font-size: 13px;
-      opacity: 0.22;
+      font-size: 12px;
       flex-shrink: 0;
+      padding: 2px 7px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      color: var(--muted);
+      opacity: 0.45;
       transition: opacity 0.2s;
     }
-    .dinner-row.admin-clickable:hover .dr-photo-badge { opacity: 0.65; }
-    .dr-photo-badge.has-photos { opacity: 0.85; }
+    .dinner-row.admin-clickable:hover .dr-photo-badge { opacity: 0.7; }
+    .dr-photo-badge.has-photos {
+      opacity: 1;
+      color: #2a7a3a;
+      background: #e8f5e9;
+      border-color: #81c784;
+    }
     .detail-hidden-input { display: none; }
     .detail-text-view { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .tema-content {
@@ -1981,7 +1990,7 @@ function renderSchedule() {
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
           ${d.cancelled ? '<span class="dr-cancelled-badge">Aflyst</span>' : isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
-          ${isMember ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
+          ${isMember ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">${hasPhotos ? '📸 Billeder' : '📷'}</span>` : ''}
           ${isAdmin ? `<button class="cancel-btn ${d.cancelled ? 'is-cancelled' : ''}" onclick="event.stopPropagation();toggleCancelled(${idx})" title="${d.cancelled ? 'Genaktiver' : 'Aflys'}">✕</button>` : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>
