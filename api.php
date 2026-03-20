@@ -79,7 +79,29 @@ $recipients = array_values($members);
 
 // ── GET: return current dinner list ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    echo file_exists($file) ? file_get_contents($file) : '[]';
+    $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+
+    // Engangs-migration: historiske RSVP-data for 2025-05-03
+    $changed = false;
+    foreach ($dinners as &$d) {
+        if ($d['date'] === '2025-05-03' && empty($d['rsvp'])) {
+            $d['rsvp'] = [
+                'Frøding'     => ['token' => '', 'status' => 'confirmed'],
+                'Cronstjerne' => ['token' => '', 'status' => 'confirmed'],
+                'Gjelsted'    => ['token' => '', 'status' => 'confirmed'],
+                'Bisp'        => ['token' => '', 'status' => 'confirmed'],
+                'Larsen'      => ['token' => '', 'status' => 'confirmed'],
+                'Hartmann'    => ['token' => '', 'status' => 'confirmed'],
+            ];
+            $changed = true;
+        }
+    }
+    unset($d);
+    if ($changed) {
+        file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+
+    echo json_encode($dinners);
     exit;
 }
 
