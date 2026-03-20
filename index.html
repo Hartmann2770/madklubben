@@ -409,6 +409,8 @@
     }
     .attendee-chip.confirmed { background: #e8f5e9; border-color: #81c784; color: #2a7a3a; }
     .attendee-chip.declined  { background: #fdecea; border-color: #e57373; color: #c0392b; }
+    .attendee-chip.toggleable { cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+    .attendee-chip.toggleable:hover { filter: brightness(0.93); }
     @media (max-width: 600px) {
       .attendees-section { padding: 16px 14px 12px; }
     }
@@ -2330,6 +2332,24 @@ function goBack() {
 }
 
 function renderAttendees(dinner) {
+  const past = isPast(dinner.date);
+
+  if (past && isMember) {
+    // Past dinner: all active members as toggleable chips
+    const rsvp = dinner.rsvp || {};
+    const chips = ACTIVE_MEMBERS.map(name => {
+      const status = rsvp[name]?.status ?? 'declined';
+      const cls = status === 'confirmed' ? 'confirmed' : '';
+      const label = status === 'confirmed' ? '✓ ' + esc(name) : esc(name);
+      return `<span class="attendee-chip toggleable ${cls}" onclick="toggleAttendance('${esc(dinner.date)}','${esc(name)}')">${label}</span>`;
+    }).join('');
+    return `<div class="attendees-section">
+      <div class="attendees-label">Deltagere</div>
+      <div class="attendees-chips">${chips}</div>
+    </div>`;
+  }
+
+  // Future dinner: read-only RSVP display
   if (!dinner.rsvp) return '';
   const confirmed = Object.entries(dinner.rsvp).filter(([, e]) => e.status === 'confirmed').map(([n]) => n);
   const declined  = Object.entries(dinner.rsvp).filter(([, e]) => e.status === 'declined').map(([n]) => n);
@@ -2347,6 +2367,33 @@ function renderAttendees(dinner) {
       ${group('Svarede ikke', pending, '')}
     </div>
   </div>`;
+}
+
+async function toggleAttendance(date, name) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner) return;
+  if (!dinner.rsvp) dinner.rsvp = {};
+  if (!dinner.rsvp[name]) dinner.rsvp[name] = { token: '', status: 'declined' };
+  dinner.rsvp[name].status = dinner.rsvp[name].status === 'confirmed' ? 'declined' : 'confirmed';
+
+  // Build full attendance object with all members
+  const attendance = {};
+  ACTIVE_MEMBERS.forEach(m => {
+    attendance[m] = { token: dinner.rsvp[m]?.token ?? '', status: dinner.rsvp[m]?.status ?? 'declined' };
+  });
+  dinner.rsvp = attendance;
+
+  try {
+    const res = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_attendance', dinnerDate: date, attendance }) });
+    const data = await res.json();
+    if (!data.ok) { alert('Fejl ved gemning'); return; }
+  } catch { alert('Netværksfejl'); return; }
+
+  // Re-render detail view
+  const scrollY = window.scrollY;
+  document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
+  window.scrollTo(0, scrollY);
 }
 
 function renderDinnerDetail(dinner) {
