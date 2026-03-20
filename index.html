@@ -2522,11 +2522,12 @@ async function doUpload(file, date, num, type) {
       const dinner = DINNERS.find(d => d.date === date);
       if (dinner) {
         dinner.detaljer = dinner.detaljer || {};
+        const versionedPath = data.path + '?v=' + Date.now();
         if (type === 'gruppe') {
-          dinner.detaljer.gruppe = data.path;
+          dinner.detaljer.gruppe = versionedPath;
         } else {
           dinner.detaljer[type] = dinner.detaljer[type] || {};
-          dinner.detaljer[type].billede = data.path;
+          dinner.detaljer[type].billede = versionedPath;
         }
         localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
         document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
