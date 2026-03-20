@@ -10,7 +10,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
 
 $file  = __DIR__ . '/dinners.json';
-$token = 'TMK04';
+$token = '19143057';
 
 function sendMail(string $to, string $subject, string $body): bool {
     require_once __DIR__ . '/config.php';
@@ -50,7 +50,7 @@ $members = [
     'Frøding'     => 'mark@froeding.dk',
     'Rifsdal'     => 'rifsdal@aol.com',
     'Larsen'      => 'ebola112@yahoo.com',
-    'Mekanikeren' => 'UDFYLD@example.com',
+    'Mekanikeren' => 'patrickhjvod@gmail.com',
 ];
 
 // Email recipients til generelle beskeder
