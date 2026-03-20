@@ -1558,8 +1558,7 @@ let DINNERS = (function() {
 const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','Thyregod',
                          'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 const PASSIVE_MEMBERS = ['Jahnsen'];
-const ADMIN_CODE    = '19143057';
-const MEMBER_CODE   = 'TMK04';
+// Koder valideres server-side i api.php — ikke gemt her
 const ANCHOR_DATE   = '2026-01-31'; // Madklub #66
 const ANCHOR_NUMBER = 66;
 function getDinnerNumber(dinner) {
@@ -1609,7 +1608,7 @@ async function saveDinners() {
     await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, dinners: DINNERS })
+      body: JSON.stringify({ dinners: DINNERS })
     });
   } catch(e) { /* offline – localStorage er gemt */ }
 }
@@ -1894,7 +1893,7 @@ async function sendRsvp(dinnerDate) {
   if (!confirm(`Sende RSVP-invitationer til alle 10 medlemmer for Madklub #${num} den ${formatShort(dinnerDate)}?`)) return;
   try {
     const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_rsvp', dinnerDate, dinnerNumber: num }) });
+      body: JSON.stringify({ action: 'send_rsvp', dinnerDate, dinnerNumber: num }) });
     const data = await res.json();
     if (data.ok) {
       const failMsg = data.failed && data.failed.length ? `\nMislykkedes: ${data.failed.join(', ')} (udfyld email i api.php)` : '';
@@ -1918,7 +1917,7 @@ async function sendRsvpReminder(dinnerDate) {
   if (!confirm(`Sende påmindelse til ${pending.length} member(s) der ikke har svaret på Madklub #${num}?\n\n${pending.join(', ')}`)) return;
   try {
     const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_rsvp_reminder', dinnerDate }) });
+      body: JSON.stringify({ action: 'send_rsvp_reminder', dinnerDate }) });
     const data = await res.json();
     if (data.ok) {
       const failMsg = data.failed && data.failed.length ? `\nMislykkedes: ${data.failed.join(', ')} (udfyld email i api.php)` : '';
@@ -1935,7 +1934,7 @@ async function resetRsvp(dinnerDate) {
   if (!confirm(`Nulstil RSVP for middagen den ${formatShort(dinnerDate)}? Alle svar slettes.`)) return;
   try {
     const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'reset_rsvp', dinnerDate }) });
+      body: JSON.stringify({ action: 'reset_rsvp', dinnerDate }) });
     const data = await res.json();
     if (data.ok) {
       await syncRsvpFromServer();
@@ -2017,6 +2016,8 @@ function openLogin() {
   if (isMember) {
     // Log ud
     isAdmin = false; isMember = false; editingIndex = -1; addingDinner = false;
+    fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'logout' }) });
     updateLoginBtn(); renderSchedule(); renderGallery();
     if (document.getElementById('dinner-detail').style.display !== 'none') {
       window.location.hash = ''; showMainView();
@@ -2031,27 +2032,41 @@ function openLogin() {
 function closeLogin() {
   document.getElementById('login-modal').style.display = 'none';
 }
-function submitLogin() {
-  const val = document.getElementById('login-input').value;
-  if (val === ADMIN_CODE) {
-    isAdmin = true; isMember = true;
-  } else if (val === MEMBER_CODE) {
-    isAdmin = false; isMember = true;
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-    document.getElementById('login-input').select();
-    return;
-  }
-  closeLogin();
-  updateLoginBtn();
-  renderSchedule();
-  renderGallery();
-  if (pendingDinnerDate) {
-    const date = pendingDinnerDate;
-    pendingDinnerDate = null;
-    window.location.hash = '#middag-' + date;
-  } else if (window.location.hash.startsWith('#middag-')) {
-    handleHash();
+async function submitLogin() {
+  const code    = document.getElementById('login-input').value;
+  const errEl   = document.getElementById('login-error');
+  const btn     = document.querySelector('#login-modal .btn-gold');
+  btn.disabled  = true;
+  btn.textContent = 'Checker...';
+  errEl.style.display = 'none';
+  try {
+    const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', code }) });
+    const data = await res.json();
+    if (data.ok) {
+      isAdmin  = data.role === 'admin';
+      isMember = true;
+      closeLogin();
+      updateLoginBtn();
+      renderSchedule();
+      renderGallery();
+      if (pendingDinnerDate) {
+        const date = pendingDinnerDate;
+        pendingDinnerDate = null;
+        window.location.hash = '#middag-' + date;
+      } else if (window.location.hash.startsWith('#middag-')) {
+        handleHash();
+      }
+    } else {
+      errEl.style.display = 'block';
+      document.getElementById('login-input').select();
+    }
+  } catch(e) {
+    errEl.textContent = 'Netværksfejl — prøv igen';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Log ind';
   }
 }
 function updateLoginBtn() {
@@ -2085,7 +2100,7 @@ async function sendMsg() {
   status.textContent = '';
   try {
     const res  = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'send_email', subject, message }) });
+      body: JSON.stringify({ action: 'send_email', subject, message }) });
     const data = await res.json();
     if (data.ok) {
       status.textContent = `✓ Sendt til ${data.sent} modtager${data.sent !== 1 ? 'e' : ''}`;
@@ -2303,7 +2318,6 @@ async function handleUpload(input, date, num, type) {
   input.value = '';
   const file = await compressImage(raw);
   const form = new FormData();
-  form.append('token', ADMIN_CODE);
   form.append('action', 'upload_dinner_image');
   form.append('dinnerDate', date);
   form.append('dinnerNumber', num);
@@ -2361,7 +2375,7 @@ async function saveDetailText(date, type, btn) {
     await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ADMIN_CODE, action: 'save_dinner_detail', dinnerDate: date, detaljer: dinner.detaljer })
+      body: JSON.stringify({ action: 'save_dinner_detail', dinnerDate: date, detaljer: dinner.detaljer })
     });
   } catch(e) { /* offline */ }
   // Re-render detail ved nuværende scroll-position

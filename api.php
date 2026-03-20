@@ -1,6 +1,6 @@
 <?php
 // Madklubben – API
-// Handles dinner data (GET/POST) and email sending.
+session_start();
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -9,8 +9,29 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
 
-$file  = __DIR__ . '/dinners.json';
-$token = '19143057';
+$file = __DIR__ . '/dinners.json';
+
+// ── Koder (kun synlige server-side) ─────────────────────────────────
+define('ADMIN_CODE',  '19143057');
+define('MEMBER_CODE', 'TMK04');
+
+// ── Hjælpefunktioner ─────────────────────────────────────────────────
+function getRole(): ?string {
+    return $_SESSION['mk_role'] ?? null;
+}
+function requireRole(string $min): void {
+    $role = getRole();
+    if (!$role) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Log ind for at fortsætte']);
+        exit;
+    }
+    if ($min === 'admin' && $role !== 'admin') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Kræver admin-adgang']);
+        exit;
+    }
+}
 
 function sendMail(string $to, string $subject, string $body): bool {
     require_once __DIR__ . '/config.php';
@@ -39,7 +60,7 @@ function sendMail(string $to, string $subject, string $body): bool {
     }
 }
 
-// Medlemsregister — udfyld manglende emailadresser
+// Medlemsregister
 $members = [
     'Heide'       => 'heide@madklubben.com',
     'Hartmann'    => 'simonbirkhartmann@gmail.com',
@@ -67,15 +88,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // ── POST ─────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // ── Multipart (fil-upload) ────────────────────────────────────────
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+    // ── Multipart (fil-upload) ────────────────────────────────────────
     if (strpos($contentType, 'multipart/form-data') !== false) {
-        $postToken = $_POST['token'] ?? '';
-        if ($postToken !== $token) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Unauthorized']);
-            exit;
-        }
+        requireRole('member');
         $action = $_POST['action'] ?? '';
 
         if ($action === 'upload_dinner_image') {
@@ -108,7 +125,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dir = __DIR__ . "/billeder/madklub-{$dinnerNumber}";
             if (!is_dir($dir)) mkdir($dir, 0755, true);
 
-            // Slet evt. gammel version med anden extension
             foreach (['jpg', 'png', 'webp', 'gif'] as $oldExt) {
                 $oldPath = "{$dir}/{$imgType}.{$oldExt}";
                 if (file_exists($oldPath)) unlink($oldPath);
@@ -125,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $path = "billeder/madklub-{$dinnerNumber}/{$filename}";
 
-            // Opdater dinners.json
             $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
             foreach ($dinners as &$d) {
                 if ($d['date'] !== $dinnerDate) continue;
@@ -150,9 +165,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // ── JSON body ─────────────────────────────────────────────────────
     $body = json_decode(file_get_contents('php://input'), true);
 
-    // ── RSVP Confirm (kræver IKKE admin-token) ────────────────────────
+    // ── Login ─────────────────────────────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'login') {
+        $code = trim($body['code'] ?? '');
+        if ($code === ADMIN_CODE) {
+            $_SESSION['mk_role'] = 'admin';
+            echo json_encode(['ok' => true, 'role' => 'admin']);
+        } elseif ($code === MEMBER_CODE) {
+            $_SESSION['mk_role'] = 'member';
+            echo json_encode(['ok' => true, 'role' => 'member']);
+        } else {
+            echo json_encode(['ok' => false]);
+        }
+        exit;
+    }
+
+    // ── Logout ────────────────────────────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'logout') {
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        }
+        session_destroy();
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    // ── RSVP Confirm (kræver ikke login) ─────────────────────────────
     if (isset($body['action']) && $body['action'] === 'rsvp_confirm') {
         $rsvpToken = trim($body['rsvpToken'] ?? '');
         $svarRaw   = ($body['svar'] ?? 'ja');
@@ -181,12 +224,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Token-validering (kræves for alle nedenstående actions) ────────
-    if (!isset($body['token']) || $body['token'] !== $token) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Unauthorized']);
-        exit;
-    }
+    // ── Alle nedenstående kræver mindst member-login ──────────────────
+    requireRole('member');
 
     // ── Send RSVP ─────────────────────────────────────────────────────
     if (isset($body['action']) && $body['action'] === 'send_rsvp') {
@@ -214,17 +253,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Generer tokens
             $rsvpMap = [];
             foreach ($members as $name => $email) {
                 $rsvpMap[$name] = ['token' => bin2hex(random_bytes(6)), 'status' => 'pending'];
             }
             $dinner['rsvp'] = $rsvpMap;
-
-            // Gem straks
             file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
-            // Byg email-indhold
             $dateFormatted = (new DateTime($dinnerDate))->format('d/m/Y');
             $chefs         = implode(' & ', $dinner['chefs'] ?? []);
             $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
@@ -234,72 +269,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sent   = 0;
             foreach ($rsvpMap as $name => $entry) {
                 $email = $members[$name] ?? null;
-                if (!$email || strpos($email, 'UDFYLD') !== false) {
-                    $failed[] = $name;
-                    continue;
-                }
+                if (!$email || strpos($email, 'UDFYLD') !== false) { $failed[] = $name; continue; }
                 $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
                 $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
                 $deadline   = (new DateTime($dinnerDate))->modify('-3 days')->format('d/m/Y');
                 $subject    = "Invitation til Madklub #{$dinnerNumber} den $dateFormatted";
                 $message    = "Hej $name,\n\nDu er inviteret til Madklub #{$dinnerNumber} den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
-
-                if (sendMail($email, $subject, $message)) {
-                    $sent++;
-                } else {
-                    $failed[] = $name;
-                }
+                if (sendMail($email, $subject, $message)) $sent++; else $failed[] = $name;
             }
             echo json_encode(['ok' => true, 'sent' => $sent, 'failed' => $failed]);
             exit;
         }
 
-        if (!$found) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Middag ikke fundet']);
-        }
+        if (!$found) { http_response_code(404); echo json_encode(['error' => 'Middag ikke fundet']); }
         exit;
     }
 
-    // ── Send RSVP Reminder (kun pending) ─────────────────────────────
+    // ── Send RSVP Reminder ────────────────────────────────────────────
     if (isset($body['action']) && $body['action'] === 'send_rsvp_reminder') {
         $dinnerDate = trim($body['dinnerDate'] ?? '');
-        if (!$dinnerDate) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Manglende dinnerDate']);
-            exit;
-        }
+        if (!$dinnerDate) { http_response_code(400); echo json_encode(['error' => 'Manglende dinnerDate']); exit; }
         $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
         foreach ($dinners as $dinner) {
             if ($dinner['date'] !== $dinnerDate) continue;
-            if (empty($dinner['rsvp'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'RSVP ikke sendt endnu']);
-                exit;
-            }
+            if (empty($dinner['rsvp'])) { http_response_code(400); echo json_encode(['error' => 'RSVP ikke sendt endnu']); exit; }
             $dateFormatted = (new DateTime($dinnerDate))->format('d/m/Y');
             $chefs         = implode(' & ', $dinner['chefs'] ?? []);
             $locationLine  = !empty($dinner['location']) ? "Sted: Hos {$dinner['location']}\n" : '';
-
-            $failed = [];
-            $sent   = 0;
+            $failed = []; $sent = 0;
             foreach ($dinner['rsvp'] as $name => $entry) {
                 if ($entry['status'] !== 'pending') continue;
                 $email = $members[$name] ?? null;
-                if (!$email || strpos($email, 'UDFYLD') !== false) {
-                    $failed[] = $name;
-                    continue;
-                }
+                if (!$email || strpos($email, 'UDFYLD') !== false) { $failed[] = $name; continue; }
                 $confirmUrl = "https://madklubben.com/?rsvp={$entry['token']}";
                 $declineUrl = "https://madklubben.com/?rsvp={$entry['token']}&svar=nej";
                 $deadline   = (new DateTime($dinnerDate))->modify('-3 days')->format('d/m/Y');
                 $subject    = "Påmindelse: Svar på invitation til Madklubben den $dateFormatted";
                 $message    = "Hej $name,\n\nVi mangler stadig dit svar på Madklubben den $dateFormatted.\nKokke: $chefs\n{$locationLine}\nBekræft din deltagelse her:\n$confirmUrl\n\nAfmeld dig her:\n$declineUrl\n\nSvar venligst senest den $deadline.\n\nSes der!\nMadklubben";
-                if (sendMail($email, $subject, $message)) {
-                    $sent++;
-                } else {
-                    $failed[] = $name;
-                }
+                if (sendMail($email, $subject, $message)) $sent++; else $failed[] = $name;
             }
             echo json_encode(['ok' => true, 'sent' => $sent, 'failed' => $failed]);
             exit;
@@ -313,48 +320,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($body['action']) && $body['action'] === 'save_dinner_detail') {
         $dinnerDate = trim($body['dinnerDate'] ?? '');
         $detaljer   = $body['detaljer'] ?? [];
-        if (!$dinnerDate) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Manglende dinnerDate']);
-            exit;
-        }
+        if (!$dinnerDate) { http_response_code(400); echo json_encode(['error' => 'Manglende dinnerDate']); exit; }
         $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
         $found = false;
         foreach ($dinners as &$d) {
             if ($d['date'] !== $dinnerDate) continue;
             if (!isset($d['detaljer'])) $d['detaljer'] = [];
-            // Kun tekst-felter opdateres (billeder styres via upload_dinner_image)
             foreach (['forret', 'hoved', 'dessert'] as $type) {
                 if (isset($detaljer[$type]['tekst'])) {
                     if (!isset($d['detaljer'][$type])) $d['detaljer'][$type] = [];
                     $d['detaljer'][$type]['tekst'] = $detaljer[$type]['tekst'];
                 }
             }
-            if (array_key_exists('tema', $detaljer)) {
-                $d['detaljer']['tema'] = $detaljer['tema'];
-            }
+            if (array_key_exists('tema', $detaljer)) $d['detaljer']['tema'] = $detaljer['tema'];
             $found = true;
             break;
         }
         unset($d);
-        if (!$found) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Middag ikke fundet']);
-            exit;
-        }
+        if (!$found) { http_response_code(404); echo json_encode(['error' => 'Middag ikke fundet']); exit; }
         file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
         echo json_encode(['ok' => true]);
         exit;
     }
 
-    // ── Reset RSVP ────────────────────────────────────────────────────
+    // ── Send email ────────────────────────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'send_email') {
+        $subject = trim($body['subject'] ?? '');
+        $message = trim($body['message'] ?? '');
+        if (!$subject || !$message) { http_response_code(400); echo json_encode(['error' => 'Emne og besked må ikke være tomme']); exit; }
+        $failed = [];
+        foreach ($recipients as $to) {
+            if (!sendMail($to, $subject, $message)) $failed[] = $to;
+        }
+        echo empty($failed)
+            ? json_encode(['ok' => true, 'sent' => count($recipients)])
+            : json_encode(['ok' => false, 'failed' => $failed]);
+        exit;
+    }
+
+    // ── Admin-only: nulstil RSVP ──────────────────────────────────────
+    requireRole('admin');
+
     if (isset($body['action']) && $body['action'] === 'reset_rsvp') {
         $dinnerDate = trim($body['dinnerDate'] ?? '');
-        if (!$dinnerDate) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Manglende dinnerDate']);
-            exit;
-        }
+        if (!$dinnerDate) { http_response_code(400); echo json_encode(['error' => 'Manglende dinnerDate']); exit; }
         $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
         foreach ($dinners as &$dinner) {
             if ($dinner['date'] === $dinnerDate) {
@@ -369,39 +378,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Send email ────────────────────────────────────────────────────
-    if (isset($body['action']) && $body['action'] === 'send_email') {
-        $subject = trim($body['subject'] ?? '');
-        $message = trim($body['message'] ?? '');
-
-        if (!$subject || !$message) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Emne og besked må ikke være tomme']);
-            exit;
-        }
-
-        $failed = [];
-        foreach ($recipients as $to) {
-            if (!sendMail($to, $subject, $message)) {
-                $failed[] = $to;
-            }
-        }
-
-        if (empty($failed)) {
-            echo json_encode(['ok' => true, 'sent' => count($recipients)]);
-        } else {
-            echo json_encode(['ok' => false, 'failed' => $failed]);
-        }
-        exit;
-    }
-
-    // ── Save dinners ──────────────────────────────────────────────────
+    // ── Admin-only: gem middageliste ──────────────────────────────────
     if (!isset($body['dinners']) || !is_array($body['dinners'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid data']);
         exit;
     }
-
     file_put_contents($file, json_encode($body['dinners'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
     echo json_encode(['ok' => true]);
     exit;
