@@ -1964,7 +1964,7 @@ function renderSchedule() {
           : '';
         const num = getDinnerNumber(d);
         const hasPhotos = d.detaljer && (getGruppePhotos(d).length || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
-        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${d.cancelled ? 'cancelled' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${d.cancelled ? 'cancelled' : ''} admin-clickable" onclick="openDinnerDetail('${esc(d.date)}')">
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
