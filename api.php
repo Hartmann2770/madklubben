@@ -74,10 +74,8 @@ $members = [
     'Mekanikeren' => 'patrickhjvod@gmail.com',
 ];
 
-// Email recipients til generelle beskeder
-$recipients = [
-    'simonbirkhartmann@gmail.com',
-];
+// Email recipients til generelle beskeder — alle medlemmer
+$recipients = array_values($members);
 
 // ── GET: return current dinner list ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
