@@ -2347,8 +2347,8 @@ function goBack() {
 function renderAttendees(dinner) {
   const past = isPast(dinner.date);
 
-  if (past && isMember) {
-    // Past dinner: all active members as toggleable chips
+  if (past && isAdmin) {
+    // Past dinner (admin): all active members as toggleable chips
     const rsvp = dinner.rsvp || {};
     const chips = ACTIVE_MEMBERS.map(name => {
       const status = rsvp[name]?.status ?? 'declined';
@@ -2359,6 +2359,17 @@ function renderAttendees(dinner) {
     return `<div class="attendees-section">
       <div class="attendees-label">Deltagere</div>
       <div class="attendees-chips">${chips}</div>
+    </div>`;
+  }
+
+  if (past && isMember) {
+    // Past dinner (member): read-only view of who attended
+    const rsvp = dinner.rsvp || {};
+    const attended = ACTIVE_MEMBERS.filter(name => rsvp[name]?.status === 'confirmed');
+    if (!attended.length) return '';
+    return `<div class="attendees-section">
+      <div class="attendees-label">Deltagere</div>
+      <div class="attendees-chips">${attended.map(n => `<span class="attendee-chip confirmed">${esc(n)}</span>`).join('')}</div>
     </div>`;
   }
 
