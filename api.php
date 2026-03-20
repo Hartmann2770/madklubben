@@ -147,13 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dir = __DIR__ . "/billeder/madklub-{$dinnerNumber}";
             if (!is_dir($dir)) mkdir($dir, 0755, true);
 
-            foreach (['jpg', 'png', 'webp', 'gif'] as $oldExt) {
-                $oldPath = "{$dir}/{$imgType}.{$oldExt}";
-                if (file_exists($oldPath)) unlink($oldPath);
+            if ($imgType === 'gruppe') {
+                $filename = 'gruppe_' . time() . '.' . $ext;
+            } else {
+                foreach (['jpg', 'png', 'webp', 'gif'] as $oldExt) {
+                    $oldPath = "{$dir}/{$imgType}.{$oldExt}";
+                    if (file_exists($oldPath)) unlink($oldPath);
+                }
+                $filename = "{$imgType}.{$ext}";
             }
 
-            $filename = "{$imgType}.{$ext}";
-            $dest     = "{$dir}/{$filename}";
+            $dest = "{$dir}/{$filename}";
 
             if (!move_uploaded_file($uploadedFile['tmp_name'], $dest)) {
                 http_response_code(500);
@@ -164,11 +168,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $path = "billeder/madklub-{$dinnerNumber}/{$filename}";
 
             $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+            $gruppebilder = null; $gruppeFeatured = 0;
             foreach ($dinners as &$d) {
                 if ($d['date'] !== $dinnerDate) continue;
                 if (!isset($d['detaljer'])) $d['detaljer'] = [];
                 if ($imgType === 'gruppe') {
-                    $d['detaljer']['gruppe'] = $path;
+                    // Migrate old single 'gruppe' to array
+                    if (!isset($d['detaljer']['gruppebilder'])) {
+                        $d['detaljer']['gruppebilder'] = isset($d['detaljer']['gruppe']) ? [$d['detaljer']['gruppe']] : [];
+                        unset($d['detaljer']['gruppe']);
+                    }
+                    $d['detaljer']['gruppebilder'][] = $path;
+                    if (!isset($d['detaljer']['gruppeFeatured'])) $d['detaljer']['gruppeFeatured'] = 0;
+                    $gruppebilder  = $d['detaljer']['gruppebilder'];
+                    $gruppeFeatured = $d['detaljer']['gruppeFeatured'];
                 } else {
                     if (!isset($d['detaljer'][$imgType])) $d['detaljer'][$imgType] = [];
                     $d['detaljer'][$imgType]['billede'] = $path;
@@ -178,7 +191,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($d);
             file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
-            echo json_encode(['ok' => true, 'path' => $path]);
+            $resp = ['ok' => true, 'path' => $path];
+            if ($gruppebilder !== null) { $resp['gruppebilder'] = $gruppebilder; $resp['gruppeFeatured'] = $gruppeFeatured; }
+            echo json_encode($resp);
             exit;
         }
 
@@ -378,6 +393,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? json_encode(['ok' => true, 'sent' => count($recipients)])
             : json_encode(['ok' => false, 'failed' => $failed]);
         exit;
+    }
+
+    // ── Gem fremmøde (historiske middage) ────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'save_attendance') {
+        $dinnerDate = trim($body['dinnerDate'] ?? '');
+        $attendance = $body['attendance'] ?? [];
+        if (!$dinnerDate || !is_array($attendance)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Ugyldige parametre']);
+            exit;
+        }
+        $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+        $found = false;
+        foreach ($dinners as &$d) {
+            if ($d['date'] !== $dinnerDate) continue;
+            $d['rsvp'] = $attendance;
+            $found = true;
+            break;
+        }
+        unset($d);
+        if (!$found) { http_response_code(404); echo json_encode(['error' => 'Middag ikke fundet']); exit; }
+        file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    // ── Sæt fremhævet gruppebillede ───────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'set_gruppe_featured') {
+        $dinnerDate = trim($body['dinnerDate'] ?? '');
+        $idx = intval($body['idx'] ?? 0);
+        $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+        foreach ($dinners as &$d) {
+            if ($d['date'] !== $dinnerDate) continue;
+            if (!isset($d['detaljer'])) $d['detaljer'] = [];
+            $d['detaljer']['gruppeFeatured'] = $idx;
+            file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            echo json_encode(['ok' => true]);
+            exit;
+        }
+        http_response_code(404); echo json_encode(['error' => 'Middag ikke fundet']); exit;
+    }
+
+    // ── Slet gruppebillede ────────────────────────────────────────────
+    if (isset($body['action']) && $body['action'] === 'delete_gruppe_photo') {
+        $dinnerDate = trim($body['dinnerDate'] ?? '');
+        $idx = intval($body['idx'] ?? 0);
+        $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+        foreach ($dinners as &$d) {
+            if ($d['date'] !== $dinnerDate) continue;
+            $bilder = $d['detaljer']['gruppebilder'] ?? [];
+            if (!isset($bilder[$idx])) { http_response_code(400); echo json_encode(['error' => 'Ugyldigt index']); exit; }
+            $pathToDelete = __DIR__ . '/' . preg_replace('/\?.*$/', '', $bilder[$idx]);
+            if (file_exists($pathToDelete)) @unlink($pathToDelete);
+            array_splice($bilder, $idx, 1);
+            $d['detaljer']['gruppebilder'] = array_values($bilder);
+            $featured = intval($d['detaljer']['gruppeFeatured'] ?? 0);
+            if ($featured >= count($bilder)) $featured = max(0, count($bilder) - 1);
+            $d['detaljer']['gruppeFeatured'] = $featured;
+            file_put_contents($file, json_encode($dinners, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            echo json_encode(['ok' => true, 'gruppebilder' => $d['detaljer']['gruppebilder'], 'gruppeFeatured' => $featured]);
+            exit;
+        }
+        http_response_code(404); echo json_encode(['error' => 'Middag ikke fundet']); exit;
     }
 
     // ── Admin-only: nulstil RSVP ──────────────────────────────────────

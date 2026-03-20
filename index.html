@@ -1001,7 +1001,7 @@
       margin-bottom: 16px;
     }
     .detail-group-section { margin-bottom: 56px; }
-    .group-img-wrap {
+    .gruppe-carousel {
       width: 100%;
       aspect-ratio: 16/9;
       border-radius: var(--radius);
@@ -1010,22 +1010,41 @@
       border: 1px solid var(--border);
       position: relative;
     }
-    .group-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .group-img-replace {
+    .gruppe-carousel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gruppe-nav {
       position: absolute;
-      bottom: 12px; right: 12px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      border: none;
+      top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.55);
+      color: #fff; border: none; cursor: pointer;
+      font-size: 22px; line-height: 1;
+      padding: 8px 13px;
       border-radius: 6px;
-      font-size: 12px;
-      padding: 6px 14px;
-      cursor: pointer;
       font-family: 'Inter', sans-serif;
-      opacity: 0;
-      transition: opacity 0.2s;
+      opacity: 0; transition: opacity 0.2s;
+      z-index: 2;
     }
-    .group-img-wrap:hover .group-img-replace { opacity: 1; }
+    .gruppe-carousel:hover .gruppe-nav { opacity: 1; }
+    .gruppe-nav-prev { left: 10px; }
+    .gruppe-nav-next { right: 10px; }
+    .gruppe-counter {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 12px; padding: 3px 10px; border-radius: 20px;
+      font-family: 'Inter', sans-serif; pointer-events: none;
+    }
+    .gruppe-action-bar {
+      display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+    }
+    .gruppe-action-btn {
+      font-size: 12px; padding: 5px 13px;
+      border-radius: 20px; border: 1px solid var(--border);
+      background: var(--surface-raised); cursor: pointer;
+      font-family: 'Inter', sans-serif; color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .gruppe-action-btn:hover { border-color: var(--accent); }
+    .gruppe-action-btn.is-featured { border-color: #c9a227; color: #7a5c00; background: #fffbe6; }
+    @media (hover: none) { .gruppe-nav { opacity: 0.8; } }
     .group-img-cta {
       display: flex;
       flex-direction: column;
@@ -1950,7 +1969,7 @@ function renderSchedule() {
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
         const num = getDinnerNumber(d);
-        const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
+        const hasPhotos = d.detaljer && (getGruppePhotos(d).length || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
         html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${d.cancelled ? 'cancelled' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
@@ -2400,7 +2419,7 @@ function renderDinnerDetail(dinner) {
   const num  = getDinnerNumber(dinner);
   const det  = dinner.detaljer || {};
   const past = isPast(dinner.date);
-  const hasAnyContent = det.gruppe || det.forret?.billede || det.hoved?.billede || det.dessert?.billede
+  const hasAnyContent = getGruppePhotos(dinner).length || det.forret?.billede || det.hoved?.billede || det.dessert?.billede
     || det.forret?.tekst || det.hoved?.tekst || det.dessert?.tekst || det.tema;
 
   const ctaBanner = isMember && past && !hasAnyContent ? `
@@ -2451,13 +2470,26 @@ function renderDinnerDetail(dinner) {
     </div>`;
   }
 
-  const groupHtml = det.gruppe
-    ? `<div class="group-img-wrap">
-         <img src="${esc(det.gruppe)}" alt="Holdet fra Madklub #${num}">
-         ${isMember ? `<button class="group-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">Udskift billede</button>` : ''}
-       </div>`
+  const _d = dinner.date;
+  const gruppePhotos = getGruppePhotos(dinner);
+  const gruppeIdx = Math.min(_gruppeIdx[_d] ?? 0, Math.max(0, gruppePhotos.length - 1));
+  const gruppeFeatured = det.gruppeFeatured ?? 0;
+  const groupHtml = gruppePhotos.length
+    ? `<div class="gruppe-carousel" id="gruppe-carousel-${_d}">
+         <img id="gruppe-img-${_d}" src="${esc(gruppePhotos[gruppeIdx])}" alt="Holdet fra Madklub #${num}">
+         ${gruppePhotos.length > 1 ? `
+           <button class="gruppe-nav gruppe-nav-prev" onclick="stepGruppe('${_d}',-1)">&#8249;</button>
+           <button class="gruppe-nav gruppe-nav-next" onclick="stepGruppe('${_d}',1)">&#8250;</button>
+           <div class="gruppe-counter" id="gruppe-ctr-${_d}">${gruppeIdx + 1} / ${gruppePhotos.length}</div>
+         ` : ''}
+       </div>
+       ${isMember ? `<div class="gruppe-action-bar">
+         <button class="gruppe-action-btn" onclick="triggerUpload('${_d}',${num},'gruppe')">+ Tilføj billede</button>
+         <button class="gruppe-action-btn${gruppeIdx === gruppeFeatured ? ' is-featured' : ''}" id="gruppe-feat-${_d}" onclick="setGruppeFeatured('${_d}')">★ Fremhæv</button>
+         <button class="gruppe-action-btn" onclick="deleteGruppePhoto('${_d}')">Slet</button>
+       </div>` : ''}`
     : isMember
-      ? `<div class="group-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">
+      ? `<div class="group-img-cta" onclick="triggerUpload('${_d}',${num},'gruppe')">
            <div class="group-img-cta-icon">📸</div>
            <div class="group-img-cta-title">Upload gruppebillede</div>
            <div class="group-img-cta-sub">Fang holdet fra aftenen</div>
@@ -2545,6 +2577,70 @@ async function handleUpload(input, date, num, type) {
   const raw = input.files[0];
   input.value = '';
   openCropModal(raw, date, num, type);
+}
+
+// ── GRUPPE CAROUSEL STATE ────────────────────────────────────────────
+const _gruppeIdx = {}; // dinnerDate → current slide index
+
+function getGruppePhotos(dinner) {
+  const det = dinner.detaljer || {};
+  if (det.gruppebilder && det.gruppebilder.length) return det.gruppebilder;
+  if (det.gruppe) return [det.gruppe];
+  return [];
+}
+
+function stepGruppe(date, delta) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner) return;
+  const photos = getGruppePhotos(dinner);
+  if (photos.length < 2) return;
+  _gruppeIdx[date] = ((_gruppeIdx[date] ?? 0) + delta + photos.length) % photos.length;
+  const idx = _gruppeIdx[date];
+  const imgEl = document.getElementById('gruppe-img-' + date);
+  const ctrEl = document.getElementById('gruppe-ctr-' + date);
+  const featBtn = document.getElementById('gruppe-feat-' + date);
+  if (imgEl) imgEl.src = photos[idx];
+  if (ctrEl) ctrEl.textContent = (idx + 1) + ' / ' + photos.length;
+  if (featBtn) {
+    const featured = dinner.detaljer?.gruppeFeatured ?? 0;
+    featBtn.className = 'gruppe-action-btn' + (idx === featured ? ' is-featured' : '');
+  }
+}
+
+async function setGruppeFeatured(date) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner) return;
+  const idx = _gruppeIdx[date] ?? 0;
+  dinner.detaljer = dinner.detaljer || {};
+  dinner.detaljer.gruppeFeatured = idx;
+  const res = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'set_gruppe_featured', dinnerDate: date, idx }) });
+  const data = await res.json();
+  if (!data.ok) { alert('Fejl: ' + (data.error || '')); return; }
+  const featBtn = document.getElementById('gruppe-feat-' + date);
+  if (featBtn) featBtn.className = 'gruppe-action-btn is-featured';
+}
+
+async function deleteGruppePhoto(date) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner) return;
+  const idx = _gruppeIdx[date] ?? 0;
+  const photos = getGruppePhotos(dinner);
+  if (!photos.length) return;
+  if (!confirm('Slet dette billede?')) return;
+  const res = await fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete_gruppe_photo', dinnerDate: date, idx }) });
+  const data = await res.json();
+  if (!data.ok) { alert('Fejl: ' + (data.error || '')); return; }
+  dinner.detaljer = dinner.detaljer || {};
+  dinner.detaljer.gruppebilder = data.gruppebilder;
+  dinner.detaljer.gruppeFeatured = data.gruppeFeatured;
+  delete dinner.detaljer.gruppe;
+  _gruppeIdx[date] = Math.min(idx, Math.max(0, data.gruppebilder.length - 1));
+  localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
+  const scrollY = window.scrollY;
+  document.getElementById('dinner-detail-inner').innerHTML = renderDinnerDetail(dinner);
+  window.scrollTo(0, scrollY);
 }
 
 // ── CROP ─────────────────────────────────────────────────────────────
@@ -2666,7 +2762,10 @@ async function doUpload(file, date, num, type) {
         dinner.detaljer = dinner.detaljer || {};
         const versionedPath = data.path + '?v=' + Date.now();
         if (type === 'gruppe') {
-          dinner.detaljer.gruppe = versionedPath;
+          dinner.detaljer.gruppebilder = data.gruppebilder;
+          dinner.detaljer.gruppeFeatured = data.gruppeFeatured ?? 0;
+          delete dinner.detaljer.gruppe;
+          _gruppeIdx[date] = dinner.detaljer.gruppebilder.length - 1;
         } else {
           dinner.detaljer[type] = dinner.detaljer[type] || {};
           dinner.detaljer[type].billede = versionedPath;
