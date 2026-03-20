@@ -1140,6 +1140,77 @@
       .group-img-replace, .course-img-replace { opacity: 0.8; }
     }
 
+    /* ── CROP MODAL ── */
+    #crop-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,0,0.88);
+      align-items: center;
+      justify-content: center;
+    }
+    .crop-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 620px;
+      width: 95%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+    }
+    .crop-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .crop-box p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .crop-frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #000;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      margin-bottom: 18px;
+    }
+    .crop-frame:active { cursor: grabbing; }
+    .crop-frame img {
+      position: absolute;
+      pointer-events: none;
+      display: block;
+    }
+    .crop-actions { display: flex; gap: 10px; }
+    .crop-confirm-btn {
+      flex: 1;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .crop-confirm-btn:hover { opacity: 0.82; }
+    .crop-cancel-btn {
+      padding: 12px 20px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
     /* ── ICAL KNAP ── */
     .ical-btn {
       display: inline-flex;
@@ -1456,6 +1527,21 @@
 <!-- DINNER DETAIL VIEW -->
 <div id="dinner-detail" style="display:none">
   <div class="dinner-detail-view" id="dinner-detail-inner"></div>
+</div>
+
+<!-- CROP MODAL -->
+<div id="crop-modal">
+  <div class="crop-box">
+    <h2>Tilpas udsnit</h2>
+    <p>Træk billedet for at vælge hvad der skal vises</p>
+    <div class="crop-frame" id="crop-frame">
+      <img id="crop-img" src="" alt="">
+    </div>
+    <div class="crop-actions">
+      <button class="crop-cancel-btn" onclick="closeCropModal()">Annuller</button>
+      <button class="crop-confirm-btn" onclick="confirmCrop()">Gem udsnit</button>
+    </div>
+  </div>
 </div>
 
 <!-- LIGHTBOX -->
@@ -2314,9 +2400,115 @@ async function compressImage(file) {
 
 async function handleUpload(input, date, num, type) {
   if (!input.files || !input.files[0]) return;
-  const raw  = input.files[0];
+  const raw = input.files[0];
   input.value = '';
-  const file = await compressImage(raw);
+  openCropModal(raw, date, num, type);
+}
+
+// ── CROP ─────────────────────────────────────────────────────────────
+let cropState = null;
+let _cropDragging = false, _cropSX, _cropSY, _cropSOX, _cropSOY;
+
+function openCropModal(file, date, num, type) {
+  const aspectRatio = (type === 'gruppe') ? 16/9 : 4/3;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const frameW = Math.min(560, window.innerWidth - 64);
+      const frameH = Math.round(frameW / aspectRatio);
+      const scale  = Math.max(frameW / img.naturalWidth, frameH / img.naturalHeight);
+      const dispW  = img.naturalWidth  * scale;
+      const dispH  = img.naturalHeight * scale;
+      const ox = (frameW - dispW) / 2;
+      const oy = (frameH - dispH) / 2;
+      cropState = { file, date, num, type, img, scale, offsetX: ox, offsetY: oy, frameW, frameH, dispW, dispH };
+      const frame   = document.getElementById('crop-frame');
+      const cropImg = document.getElementById('crop-img');
+      frame.style.width    = frameW + 'px';
+      frame.style.height   = frameH + 'px';
+      cropImg.src          = e.target.result;
+      cropImg.style.width  = dispW + 'px';
+      cropImg.style.height = dispH + 'px';
+      cropImg.style.left   = ox + 'px';
+      cropImg.style.top    = oy + 'px';
+      document.getElementById('crop-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  cropState = null;
+}
+
+function _clampCrop(ox, oy) {
+  const { frameW, frameH, dispW, dispH } = cropState;
+  return {
+    x: Math.min(0, Math.max(frameW - dispW, ox)),
+    y: Math.min(0, Math.max(frameH - dispH, oy)),
+  };
+}
+function _applyCropDrag(dx, dy) {
+  const c = _clampCrop(_cropSOX + dx, _cropSOY + dy);
+  cropState.offsetX = c.x; cropState.offsetY = c.y;
+  const img = document.getElementById('crop-img');
+  img.style.left = c.x + 'px';
+  img.style.top  = c.y + 'px';
+}
+document.getElementById('crop-frame').addEventListener('mousedown', e => {
+  if (!cropState) return;
+  _cropDragging = true;
+  _cropSX = e.clientX; _cropSY = e.clientY;
+  _cropSOX = cropState.offsetX; _cropSOY = cropState.offsetY;
+  e.preventDefault();
+}, { passive: false });
+document.getElementById('crop-frame').addEventListener('touchstart', e => {
+  if (!cropState) return;
+  _cropDragging = true;
+  const t = e.touches[0];
+  _cropSX = t.clientX; _cropSY = t.clientY;
+  _cropSOX = cropState.offsetX; _cropSOY = cropState.offsetY;
+  e.preventDefault();
+}, { passive: false });
+document.addEventListener('mousemove', e => {
+  if (!_cropDragging || !cropState) return;
+  _applyCropDrag(e.clientX - _cropSX, e.clientY - _cropSY);
+});
+document.addEventListener('touchmove', e => {
+  if (!_cropDragging || !cropState) return;
+  const t = e.touches[0];
+  _applyCropDrag(t.clientX - _cropSX, t.clientY - _cropSY);
+  e.preventDefault();
+}, { passive: false });
+document.addEventListener('mouseup',  () => { _cropDragging = false; });
+document.addEventListener('touchend', () => { _cropDragging = false; });
+
+async function confirmCrop() {
+  if (!cropState) return;
+  const { img, scale, offsetX, offsetY, frameW, frameH, file, date, num, type } = cropState;
+  // Render crop på canvas i 2× opløsning
+  const OUT = 2;
+  const canvas = document.createElement('canvas');
+  canvas.width  = frameW * OUT;
+  canvas.height = frameH * OUT;
+  const srcX = -offsetX / scale;
+  const srcY = -offsetY / scale;
+  const srcW =  frameW  / scale;
+  const srcH =  frameH  / scale;
+  canvas.getContext('2d').drawImage(img, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+  closeCropModal();
+  canvas.toBlob(async blob => {
+    const croppedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+    await doUpload(croppedFile, date, num, type);
+  }, 'image/jpeg', 0.88);
+}
+
+async function doUpload(file, date, num, type) {
   const form = new FormData();
   form.append('action', 'upload_dinner_image');
   form.append('dinnerDate', date);
