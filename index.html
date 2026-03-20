@@ -1559,6 +1559,7 @@ const ACTIVE_MEMBERS  = ['Heide','Hartmann','Gjelsted','Thyregod',
                          'Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 const PASSIVE_MEMBERS = ['Jahnsen'];
 const ADMIN_CODE    = 'TMK04';
+const MEMBER_CODE   = 'MADKLUB25'; // ← skift til hvad du vil
 const ANCHOR_DATE   = '2026-01-31'; // Madklub #66
 const ANCHOR_NUMBER = 66;
 function getDinnerNumber(dinner) {
@@ -1569,7 +1570,8 @@ function getDinnerNumber(dinner) {
 }
 
 // ── STATE ────────────────────────────────────────────────────────────
-let isAdmin = false;
+let isAdmin  = false;
+let isMember = false; // true for både admin og almindelige medlemmer
 let editingIndex = -1;
 let addingDinner = false;
 let pendingDinnerDate = null;
@@ -1773,7 +1775,7 @@ function renderSchedule() {
           <button class="edit-cancel-btn" onclick="cancelEdit()">✕</button>
         </div>`;
       } else {
-        const rsvpPanel = isAdmin && isNxt && d.rsvp ? (function() {
+        const rsvpPanel = isMember && isNxt && d.rsvp ? (function() {
           const statusIcon = { confirmed: '✓', declined: '✗', pending: '–' };
           const chips = Object.entries(d.rsvp).map(([name, entry]) =>
             `<span class="rsvp-chip ${entry.status}">${statusIcon[entry.status] || '–'} ${esc(name)}</span>`
@@ -1785,18 +1787,18 @@ function renderSchedule() {
           return `<div class="rsvp-panel">
             <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">RSVP</div>
             <div class="rsvp-chips">${chips}</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            ${isAdmin ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
               ${reminderBtn}
               <button class="rsvp-reset-btn" style="margin:0" onclick="resetRsvp('${esc(d.date)}')">↺ Nulstil</button>
-            </div>
+            </div>` : ''}
           </div>`;
         })() : '';
-        const rsvpSendBtn = isAdmin && isNxt && !d.rsvp
+        const rsvpSendBtn = isMember && isNxt && !d.rsvp
           ? `<button class="rsvp-send-btn" onclick="sendRsvp('${esc(d.date)}')">📧 Send RSVP</button>`
           : '';
         const num = getDinnerNumber(d);
         const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
-        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} admin-clickable" onclick="openDinnerDetail('${esc(d.date)}')">
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
@@ -1807,7 +1809,7 @@ function renderSchedule() {
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
           ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
-          ${isAdmin ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
+          ${isMember ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>
         ${rsvpPanel}
@@ -2012,9 +2014,10 @@ function closeRsvpModal() {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
 function openLogin() {
-  if (isAdmin) {
-    isAdmin = false; editingIndex = -1; addingDinner = false;
-    updateLoginBtn(); renderSchedule();
+  if (isMember) {
+    // Log ud
+    isAdmin = false; isMember = false; editingIndex = -1; addingDinner = false;
+    updateLoginBtn(); renderSchedule(); renderGallery();
     if (document.getElementById('dinner-detail').style.display !== 'none') {
       window.location.hash = ''; showMainView();
     }
@@ -2029,28 +2032,34 @@ function closeLogin() {
   document.getElementById('login-modal').style.display = 'none';
 }
 function submitLogin() {
-  if (document.getElementById('login-input').value === ADMIN_CODE) {
-    isAdmin = true;
-    closeLogin();
-    updateLoginBtn();
-    renderSchedule();
-    if (pendingDinnerDate) {
-      const date = pendingDinnerDate;
-      pendingDinnerDate = null;
-      window.location.hash = '#middag-' + date;
-    } else if (window.location.hash.startsWith('#middag-')) {
-      handleHash();
-    }
+  const val = document.getElementById('login-input').value;
+  if (val === ADMIN_CODE) {
+    isAdmin = true; isMember = true;
+  } else if (val === MEMBER_CODE) {
+    isAdmin = false; isMember = true;
   } else {
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('login-input').select();
+    return;
+  }
+  closeLogin();
+  updateLoginBtn();
+  renderSchedule();
+  renderGallery();
+  if (pendingDinnerDate) {
+    const date = pendingDinnerDate;
+    pendingDinnerDate = null;
+    window.location.hash = '#middag-' + date;
+  } else if (window.location.hash.startsWith('#middag-')) {
+    handleHash();
   }
 }
 function updateLoginBtn() {
   const btn = document.getElementById('login-btn');
-  btn.textContent = isAdmin ? '🔓 Admin' : '🔒 Admin';
-  btn.classList.toggle('active', isAdmin);
-  document.getElementById('msg-btn').style.display = isAdmin ? 'block' : 'none';
+  if (isAdmin)       { btn.textContent = '🔓 Admin';   btn.classList.add('active'); }
+  else if (isMember) { btn.textContent = '🔓 Log ud';  btn.classList.add('active'); }
+  else               { btn.textContent = '🔒 Log ind'; btn.classList.remove('active'); }
+  document.getElementById('msg-btn').style.display = isMember ? 'block' : 'none';
 }
 
 function openMsg() {
@@ -2102,7 +2111,7 @@ document.getElementById('login-modal').addEventListener('click', e => {
 
 // ── DINNER DETAIL ────────────────────────────────────────────────────
 function openDinnerDetail(date) {
-  if (!isAdmin) {
+  if (!isMember) {
     pendingDinnerDate = date;
     openLogin();
     return;
@@ -2130,7 +2139,7 @@ function showMainView() {
 
 function handleHash() {
   const hash = window.location.hash;
-  if (hash.startsWith('#middag-') && isAdmin) {
+  if (hash.startsWith('#middag-') && isMember) {
     const date = decodeURIComponent(hash.slice('#middag-'.length));
     const dinner = DINNERS.find(d => d.date === date);
     if (dinner) { showDinnerDetail(dinner); return; }
@@ -2152,7 +2161,7 @@ function renderDinnerDetail(dinner) {
   const hasAnyContent = det.gruppe || det.forret?.billede || det.hoved?.billede || det.dessert?.billede
     || det.forret?.tekst || det.hoved?.tekst || det.dessert?.tekst || det.tema;
 
-  const ctaBanner = past && !hasAnyContent ? `
+  const ctaBanner = isMember && past && !hasAnyContent ? `
     <div class="detail-cta-banner">
       <div class="detail-cta-icon">📸</div>
       <div class="detail-cta-text">
@@ -2167,28 +2176,32 @@ function renderDinnerDetail(dinner) {
     const imgHtml = c.billede
       ? `<div class="course-img-wrap">
            <img src="${esc(c.billede)}" alt="${label}">
-           <button class="course-img-replace" onclick="triggerUpload('${d}',${num},'${type}')">Udskift</button>
+           ${isMember ? `<button class="course-img-replace" onclick="triggerUpload('${d}',${num},'${type}')">Udskift</button>` : ''}
          </div>`
-      : `<div class="course-img-cta" onclick="triggerUpload('${d}',${num},'${type}')">
-           <div class="course-img-cta-icon">📷</div>
-           <div class="course-img-cta-text">Upload billede<br>af ${label.toLowerCase()}</div>
-         </div>`;
+      : isMember
+        ? `<div class="course-img-cta" onclick="triggerUpload('${d}',${num},'${type}')">
+             <div class="course-img-cta-icon">📷</div>
+             <div class="course-img-cta-text">Upload billede<br>af ${label.toLowerCase()}</div>
+           </div>`
+        : `<div style="width:100%;aspect-ratio:4/3;background:var(--surface-raised);border-radius:4px;"></div>`;
     const textSection = c.tekst
       ? `<div class="detail-text-view" id="view-${type}-${d}">
            <p class="course-text-content">${esc(c.tekst)}</p>
-           <button class="detail-edit-icon" onclick="editField('${type}','${d}')" title="Rediger">✎</button>
+           ${isMember ? `<button class="detail-edit-icon" onclick="editField('${type}','${d}')" title="Rediger">✎</button>` : ''}
          </div>
-         <div id="edit-${type}-${d}" style="display:none">
+         ${isMember ? `<div id="edit-${type}-${d}" style="display:none">
            <textarea class="course-textarea" id="txt-${type}-${d}">${esc(c.tekst)}</textarea>
            <div style="display:flex;gap:8px;margin-top:8px">
              <button class="course-save-btn" onclick="saveDetailText('${d}','${type}',this)">Gem</button>
              <button class="detail-cancel-btn" onclick="cancelEditField('${type}','${d}')">Annuller</button>
            </div>
-         </div>`
-      : `<div id="edit-${type}-${d}">
-           <textarea class="course-textarea" id="txt-${type}-${d}" placeholder="Beskriv ${label.toLowerCase()}..."></textarea>
-           <button class="course-save-btn" onclick="saveDetailText('${d}','${type}',this)" style="margin-top:8px">Gem</button>
-         </div>`;
+         </div>` : ''}`
+      : isMember
+        ? `<div id="edit-${type}-${d}">
+             <textarea class="course-textarea" id="txt-${type}-${d}" placeholder="Beskriv ${label.toLowerCase()}..."></textarea>
+             <button class="course-save-btn" onclick="saveDetailText('${d}','${type}',this)" style="margin-top:8px">Gem</button>
+           </div>`
+        : '';
     return `<div class="course-card">
       <div class="course-card-label">${label}</div>
       ${imgHtml}
@@ -2199,13 +2212,15 @@ function renderDinnerDetail(dinner) {
   const groupHtml = det.gruppe
     ? `<div class="group-img-wrap">
          <img src="${esc(det.gruppe)}" alt="Holdet fra Madklub #${num}">
-         <button class="group-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">Udskift billede</button>
+         ${isMember ? `<button class="group-img-replace" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">Udskift billede</button>` : ''}
        </div>`
-    : `<div class="group-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">
-         <div class="group-img-cta-icon">📸</div>
-         <div class="group-img-cta-title">Upload gruppebillede</div>
-         <div class="group-img-cta-sub">Fang holdet fra aftenen</div>
-       </div>`;
+    : isMember
+      ? `<div class="group-img-cta" onclick="triggerUpload('${esc(dinner.date)}',${num},'gruppe')">
+           <div class="group-img-cta-icon">📸</div>
+           <div class="group-img-cta-title">Upload gruppebillede</div>
+           <div class="group-img-cta-sub">Fang holdet fra aftenen</div>
+         </div>`
+      : `<div style="width:100%;aspect-ratio:16/9;background:var(--surface-raised);border-radius:var(--radius);border:1px solid var(--border);"></div>`;
 
   const chefs = dinner.chefs.map(c => esc(c)).join(' & ');
   const loc   = dinner.location ? `<span>Hos ${esc(dinner.location)}</span>` : '';
@@ -2226,19 +2241,21 @@ function renderDinnerDetail(dinner) {
       ${det.tema
         ? `<div class="detail-text-view" id="view-tema-${esc(dinner.date)}">
              <p class="tema-content">${esc(det.tema)}</p>
-             <button class="detail-edit-icon" onclick="editField('tema','${esc(dinner.date)}')" title="Rediger">✎</button>
+             ${isMember ? `<button class="detail-edit-icon" onclick="editField('tema','${esc(dinner.date)}')" title="Rediger">✎</button>` : ''}
            </div>
-           <div id="edit-tema-${esc(dinner.date)}" style="display:none">
+           ${isMember ? `<div id="edit-tema-${esc(dinner.date)}" style="display:none">
              <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}">${esc(det.tema)}</textarea>
              <div style="display:flex;gap:8px;margin-top:8px">
                <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)">Gem</button>
                <button class="detail-cancel-btn" onclick="cancelEditField('tema','${esc(dinner.date)}')">Annuller</button>
              </div>
-           </div>`
-        : `<div id="edit-tema-${esc(dinner.date)}">
-             <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}" placeholder="Beskriv aftenens tema eller menu — fx 'Italiensk aften', 'Klassisk fransk med vinmenu'..."></textarea>
-             <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)" style="margin-top:8px">Gem</button>
-           </div>`}
+           </div>` : ''}`
+        : isMember
+          ? `<div id="edit-tema-${esc(dinner.date)}">
+               <textarea class="course-textarea" id="txt-tema-${esc(dinner.date)}" placeholder="Beskriv aftenens tema eller menu — fx 'Italiensk aften', 'Klassisk fransk med vinmenu'..."></textarea>
+               <button class="course-save-btn" onclick="saveDetailText('${esc(dinner.date)}','tema',this)" style="margin-top:8px">Gem</button>
+             </div>`
+          : `<p style="color:var(--muted);font-style:italic;font-size:14px;">—</p>`}
     </div>
     <div class="detail-courses">
       ${courseCard('forret', 'Forretten')}
@@ -2357,6 +2374,13 @@ async function saveDetailText(date, type, btn) {
 function renderGallery() {
   const container = document.getElementById('gallery');
   if (!container) return;
+  if (!isMember) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:14px;">
+      Log ind som medlem for at se galleriet.
+      <button onclick="openLogin()" style="background:none;border:none;color:var(--accent);font-family:'Inter',sans-serif;font-size:14px;cursor:pointer;text-decoration:underline;padding:0;">Log ind →</button>
+    </p>`;
+    return;
+  }
   const withPhotos = [...DINNERS]
     .filter(d => isPast(d.date) && d.detaljer && (
       d.detaljer.gruppe ||
