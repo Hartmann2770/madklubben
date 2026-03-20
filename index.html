@@ -1140,82 +1140,6 @@
       .group-img-replace, .course-img-replace { opacity: 0.8; }
     }
 
-    /* ── STATISTIK ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px 20px;
-      text-align: center;
-    }
-    .stat-num {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 700;
-      color: var(--accent);
-      line-height: 1;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .stat-label {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-    .stat-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-      font-style: italic;
-    }
-    @media (max-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .stat-card { padding: 18px 14px; }
-    }
-
-    /* ── JUBILÆUM ── */
-    .jubilee-banner {
-      background: linear-gradient(135deg, #111 0%, #2a2520 100%);
-      border-radius: var(--radius);
-      padding: 28px 32px;
-      margin-top: 32px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      color: #f6f3ee;
-    }
-    .jubilee-icon { font-size: 40px; flex-shrink: 0; }
-    .jubilee-text h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      color: #c8860a;
-      margin-bottom: 4px;
-    }
-    .jubilee-text p { font-size: 13px; opacity: 0.72; line-height: 1.5; }
-    @media (max-width: 600px) {
-      .jubilee-banner { flex-direction: column; text-align: center; padding: 20px 18px; }
-    }
-
-    /* ── JUBILÆUMS-BADGE I PROGRAM ── */
-    .dr-jubilee {
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      color: #7a4e00;
-      background: linear-gradient(135deg, rgba(200,134,10,0.18), rgba(200,134,10,0.08));
-      border: 1px solid rgba(200,134,10,0.5);
-      padding: 3px 9px;
-      border-radius: 10px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
     /* ── ICAL KNAP ── */
     .ical-btn {
       display: inline-flex;
@@ -1414,7 +1338,6 @@
     <div class="nav-links">
       <a href="#program">Program</a>
       <a href="#galleri">Galleri</a>
-      <a href="#statistik">Statistik</a>
       <a href="#medlemmer">Medlemmer</a>
       <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉<span class="msg-btn-label"> Send besked</span></button>
       <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
@@ -1487,16 +1410,6 @@
   <div class="s-eyebrow">Minder</div>
   <h2 class="s-title">Fotogalleri</h2>
   <div id="gallery"></div>
-</div>
-
-<div class="section-divider"></div>
-
-<!-- STATISTIK -->
-<div class="section" id="statistik">
-  <div class="s-eyebrow">Tallene taler</div>
-  <h2 class="s-title">Statistik</h2>
-  <div id="stats-grid"></div>
-  <div id="jubilee-block"></div>
 </div>
 
 <div class="section-divider"></div>
@@ -1884,7 +1797,6 @@ function renderSchedule() {
           : '';
         const num = getDinnerNumber(d);
         const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
-        const jubilee = num > 0 && num % 25 === 0;
         html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
@@ -1895,7 +1807,7 @@ function renderSchedule() {
           ${d.location
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
-          ${jubilee ? `<span class="dr-jubilee">🏆 Jubilæum</span>` : isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
+          ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isMember ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>
@@ -2472,88 +2384,6 @@ async function saveDetailText(date, type, btn) {
   window.scrollTo(0, scrollY);
 }
 
-// ── STATISTIK & JUBILÆUM ─────────────────────────────────────────────
-function renderStats() {
-  const gridEl    = document.getElementById('stats-grid');
-  const jubileeEl = document.getElementById('jubilee-block');
-  if (!gridEl) return;
-
-  const past   = DINNERS.filter(d => isPast(d.date));
-  const years  = new Date().getFullYear() - FOUNDED_YEAR;
-
-  // Flittigste vært
-  const chefCount = {};
-  past.forEach(d => d.chefs.forEach(c => {
-    if (c && c !== 'TBD') chefCount[c] = (chefCount[c] || 0) + 1;
-  }));
-  const topChef = Object.entries(chefCount).sort((a, b) => b[1] - a[1])[0];
-
-  // Favoritårstid (kvartal)
-  const qCount = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  const qNames = { 1: 'Vinter', 2: 'Forår', 3: 'Sommer', 4: 'Efterår' };
-  past.forEach(d => {
-    const m = parseInt(d.date.slice(5, 7));
-    const q = m <= 3 ? 1 : m <= 6 ? 2 : m <= 9 ? 3 : 4;
-    qCount[q]++;
-  });
-  const topQ = Object.entries(qCount).sort((a, b) => b[1] - a[1])[0];
-
-  // Næste jubilæums-middag
-  const sorted = [...DINNERS].sort((a, b) => a.date.localeCompare(b.date));
-  const lastPast = [...sorted].reverse().find(d => isPast(d.date));
-  const lastNum  = lastPast ? getDinnerNumber(lastPast) : 0;
-  const nextMilestone = Math.ceil((lastNum + 1) / 25) * 25;
-  const toMilestone   = nextMilestone - lastNum;
-
-  gridEl.innerHTML = `<div class="stats-grid">
-    <div class="stat-card">
-      <span class="stat-num">${lastNum}</span>
-      <div class="stat-label">Middage afholdt</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">${years}</span>
-      <div class="stat-label">År med mad & vin</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">${topChef ? esc(topChef[0]) : '—'}</span>
-      <div class="stat-label">Flittigste vært</div>
-      ${topChef ? `<div class="stat-sub">${topChef[1]} gange vært</div>` : ''}
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">${topQ ? qNames[topQ[0]] : '—'}</span>
-      <div class="stat-label">Foretrukne årstid</div>
-      ${topQ ? `<div class="stat-sub">${topQ[1]} middage</div>` : ''}
-    </div>
-  </div>`;
-
-  // Jubilæums-blok
-  if (jubileeEl) {
-    const anniversaryYear = FOUNDED_YEAR + 25;
-    const thisYear = new Date().getFullYear();
-    const jubileeLines = [];
-
-    if (toMilestone <= 10) {
-      jubileeLines.push(`Kun <strong>${toMilestone} ${toMilestone === 1 ? 'middag' : 'middage'}</strong> til Madklub #${nextMilestone} — en rund jubilæumsaften!`);
-    } else {
-      jubileeLines.push(`Næste runde jubilæum: <strong>Madklub #${nextMilestone}</strong> om ${toMilestone} middage.`);
-    }
-    if (anniversaryYear >= thisYear) {
-      const yearsTo = anniversaryYear - thisYear;
-      jubileeLines.push(yearsTo === 0
-        ? `🎂 Det er <strong>25-års jubilæum</strong> i år — tillykke!`
-        : `Madklubben fylder <strong>25 år i ${anniversaryYear}</strong>${yearsTo === 1 ? ' — næste år!' : ` — om ${yearsTo} år.`}`);
-    }
-
-    jubileeEl.innerHTML = `<div class="jubilee-banner">
-      <div class="jubilee-icon">🏆</div>
-      <div class="jubilee-text">
-        <h3>Jubilæumsoversigt</h3>
-        <p>${jubileeLines.join('<br>')}</p>
-      </div>
-    </div>`;
-  }
-}
-
 // ── GALLERI ──────────────────────────────────────────────────────────
 function renderGallery() {
   const container = document.getElementById('gallery');
@@ -2684,7 +2514,6 @@ document.getElementById('ical-modal').addEventListener('click', e => {
 renderHero();
 renderSchedule();
 renderGallery();
-renderStats();
 renderMembers();
 tick();
 setInterval(tick, 1000);
@@ -2715,7 +2544,6 @@ handleHash();
     renderHero();
     renderSchedule();
     renderGallery();
-    renderStats();
   } catch(e) { /* server ikke tilgængelig – bruger localStorage */ }
 })();
 </script>
