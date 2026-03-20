@@ -1498,7 +1498,7 @@
       <a href="#galleri">Galleri</a>
       <a href="#medlemmer">Medlemmer</a>
       <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉<span class="msg-btn-label"> Send besked</span></button>
-      <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
+      <button id="login-btn" onclick="openLogin()">🔒 Login</button>
     </div>
   </div>
 </nav>
@@ -1681,10 +1681,10 @@
 <div id="login-modal">
   <div class="login-box">
     <div class="login-header">
-      <h2>Admin</h2>
+      <h2>Login</h2>
       <button class="login-close-btn" onclick="closeLogin()">✕</button>
     </div>
-    <p>Indtast koden for at administrere</p>
+    <p>Indtast koden for at logge ind</p>
     <input type="password" id="login-input" placeholder="Kode"
            onkeydown="if(event.key==='Enter')submitLogin()">
     <div class="login-error" id="login-error">Forkert kode — prøv igen</div>
