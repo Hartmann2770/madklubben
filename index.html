@@ -856,6 +856,7 @@
     /* Touch-enheder: edit-knap altid synlig (hover virker ikke på mobil) */
     @media (hover: none) {
       .edit-btn { opacity: 0.55; }
+      .gallery-card-overlay { opacity: 1; }
     }
 
     /* ── DINNER DETAIL VIEW ── */
@@ -1138,6 +1139,192 @@
     @media (hover: none) {
       .group-img-replace, .course-img-replace { opacity: 0.8; }
     }
+
+    /* ── ICAL KNAP ── */
+    .ical-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      padding: 6px 16px;
+      cursor: pointer;
+      margin-bottom: 32px;
+      transition: border-color 0.2s, color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ical-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── GALLERI ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .gallery-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      aspect-ratio: 4/3;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .gallery-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+    }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 55%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .gallery-card:hover .gallery-card-overlay { opacity: 1; }
+    .gallery-card-num {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #c8860a;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .gallery-card-chefs {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .gallery-card-date { font-size: 11px; color: rgba(255,255,255,0.68); }
+    .gallery-empty { color: var(--muted); font-size: 14px; font-style: italic; }
+
+    /* ── LIGHTBOX ── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0,0,0,0.93);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .lb-header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: max(16px, env(safe-area-inset-top)) 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+      z-index: 1;
+    }
+    .lb-num {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: #c8860a;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .lb-chefs {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      color: #fff;
+    }
+    .lb-close {
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .lb-close:hover { background: rgba(255,255,255,0.22); }
+    .lb-img-wrap {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 80px 64px 90px;
+    }
+    .lb-img-wrap img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      display: block;
+    }
+    .lb-nav {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.1);
+      border: none; color: #fff;
+      font-size: 26px;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      z-index: 1;
+    }
+    .lb-nav:hover { background: rgba(255,255,255,0.22); }
+    .lb-nav:disabled { opacity: 0.18; cursor: default; }
+    #lb-prev { left: 14px; }
+    #lb-next { right: 14px; }
+    .lb-footer {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+      background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 1;
+    }
+    .lb-thumb {
+      width: 56px; height: 42px;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0.45;
+      border: 2px solid transparent;
+      transition: opacity 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .lb-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .lb-thumb.active { opacity: 1; border-color: rgba(255,255,255,0.8); }
+    .lb-thumb:hover { opacity: 0.8; }
+    .lb-type-label {
+      position: absolute;
+      bottom: 72px;
+      left: 50%; transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .gallery-card-overlay { opacity: 1; }
+      .lb-img-wrap { padding: 68px 44px 88px; }
+      .lb-nav { width: 38px; height: 38px; font-size: 20px; }
+      #lb-prev { left: 5px; }
+      #lb-next { right: 5px; }
+    }
   </style>
 </head>
 <body>
@@ -1150,6 +1337,7 @@
     </div>
     <div class="nav-links">
       <a href="#program">Program</a>
+      <a href="#galleri">Galleri</a>
       <a href="#medlemmer">Medlemmer</a>
       <button id="msg-btn" onclick="openMsg()" style="display:none;background:transparent;border:1px solid rgba(0,0,0,0.2);color:var(--muted);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.2s;">✉<span class="msg-btn-label"> Send besked</span></button>
       <button id="login-btn" onclick="openLogin()">🔒 Admin</button>
@@ -1209,7 +1397,19 @@
 <div class="section" id="program">
   <div class="s-eyebrow">Kalender</div>
   <h2 class="s-title">Kommende Madklubber</h2>
+  <button class="ical-btn" onclick="downloadIcal()" title="Download .ics-fil til Google Kalender, Apple Kalender m.m.">
+    📅 Tilføj til kalender
+  </button>
   <div id="schedule"></div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- GALLERI -->
+<div class="section" id="galleri">
+  <div class="s-eyebrow">Minder</div>
+  <h2 class="s-title">Fotogalleri</h2>
+  <div id="gallery"></div>
 </div>
 
 <div class="section-divider"></div>
@@ -1256,6 +1456,24 @@
 <!-- DINNER DETAIL VIEW -->
 <div id="dinner-detail" style="display:none">
   <div class="dinner-detail-view" id="dinner-detail-inner"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <div class="lb-header">
+    <div class="lb-info">
+      <div class="lb-num" id="lb-num"></div>
+      <div class="lb-chefs" id="lb-chefs"></div>
+    </div>
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+  </div>
+  <div class="lb-img-wrap">
+    <img id="lb-img" src="" alt="">
+  </div>
+  <button class="lb-nav" id="lb-prev" onclick="navigateLightbox(-1)">‹</button>
+  <button class="lb-nav" id="lb-next" onclick="navigateLightbox(1)">›</button>
+  <div class="lb-type-label" id="lb-type"></div>
+  <div class="lb-footer" id="lb-thumbs"></div>
 </div>
 
 <!-- LOGIN MODAL -->
@@ -2107,10 +2325,157 @@ async function saveDetailText(date, type, btn) {
   window.scrollTo(0, scrollY);
 }
 
+// ── GALLERI ──────────────────────────────────────────────────────────
+function renderGallery() {
+  const container = document.getElementById('gallery');
+  if (!container) return;
+  const withPhotos = [...DINNERS]
+    .filter(d => isPast(d.date) && d.detaljer && (
+      d.detaljer.gruppe ||
+      d.detaljer.forret?.billede ||
+      d.detaljer.hoved?.billede  ||
+      d.detaljer.dessert?.billede
+    ))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (!withPhotos.length) {
+    container.innerHTML = `<p class="gallery-empty">Ingen billeder endnu — de kommer efter første middag!</p>`;
+    return;
+  }
+  const cards = withPhotos.map(d => {
+    const det   = d.detaljer;
+    const thumb = det.gruppe || det.forret?.billede || det.hoved?.billede || det.dessert?.billede;
+    const num   = getDinnerNumber(d);
+    const chefs = d.chefs.map(c => esc(c)).join(' & ');
+    return `<div class="gallery-card" onclick="openGalleryLightbox('${esc(d.date)}')">
+      <img src="${esc(thumb)}" alt="Madklub #${num}" loading="lazy">
+      <div class="gallery-card-overlay">
+        <div class="gallery-card-num">#${num}</div>
+        <div class="gallery-card-chefs">${chefs}</div>
+        <div class="gallery-card-date">${formatShort(d.date)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  container.innerHTML = `<div class="gallery-grid">${cards}</div>`;
+}
+
+// ── LIGHTBOX ─────────────────────────────────────────────────────────
+let lbPhotos = [];
+let lbIndex  = 0;
+
+function openGalleryLightbox(date) {
+  const dinner = DINNERS.find(d => d.date === date);
+  if (!dinner || !dinner.detaljer) return;
+  const det    = dinner.detaljer;
+  const photos = [];
+  if (det.gruppe)           photos.push({ src: det.gruppe,           label: 'Holdet' });
+  if (det.forret?.billede)  photos.push({ src: det.forret.billede,   label: 'Forretten' });
+  if (det.hoved?.billede)   photos.push({ src: det.hoved.billede,    label: 'Hovedretten' });
+  if (det.dessert?.billede) photos.push({ src: det.dessert.billede,  label: 'Desserten' });
+  if (!photos.length) return;
+  lbPhotos = photos;
+  lbIndex  = 0;
+  const num = getDinnerNumber(dinner);
+  document.getElementById('lb-num').textContent   = `Madklub #${num} · ${formatShort(dinner.date)}`;
+  document.getElementById('lb-chefs').textContent = dinner.chefs.join(' & ');
+  updateLightboxPhoto();
+  document.getElementById('lightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function updateLightboxPhoto() {
+  const p = lbPhotos[lbIndex];
+  document.getElementById('lb-img').src = p.src;
+  document.getElementById('lb-img').alt = p.label;
+  document.getElementById('lb-type').textContent = p.label;
+  document.getElementById('lb-prev').disabled = lbIndex === 0;
+  document.getElementById('lb-next').disabled = lbIndex === lbPhotos.length - 1;
+  document.getElementById('lb-thumbs').innerHTML = lbPhotos.map((ph, i) =>
+    `<div class="lb-thumb ${i === lbIndex ? 'active' : ''}" onclick="lbIndex=${i};updateLightboxPhoto()">
+       <img src="${esc(ph.src)}" alt="${esc(ph.label)}">
+     </div>`
+  ).join('');
+}
+
+function navigateLightbox(dir) {
+  lbIndex = Math.max(0, Math.min(lbPhotos.length - 1, lbIndex + dir));
+  updateLightboxPhoto();
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').style.display === 'flex') {
+    if (e.key === 'ArrowLeft')  navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+    if (e.key === 'Escape')     closeLightbox();
+  }
+});
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
+// ── ICAL DOWNLOAD ────────────────────────────────────────────────────
+function downloadIcal() {
+  const upcoming = DINNERS.filter(d => !isPast(d.date));
+  if (!upcoming.length) { alert('Ingen kommende middage at tilføje.'); return; }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function icsDate(dateStr, hour) {
+    const [y, m, d] = dateStr.split('-');
+    return `${y}${m}${d}T${pad(hour)}0000`;
+  }
+  function foldLine(line) {
+    const chunks = [];
+    while (line.length > 75) { chunks.push(line.slice(0, 75)); line = ' ' + line.slice(75); }
+    chunks.push(line);
+    return chunks.join('\r\n');
+  }
+
+  const events = upcoming.map(d => {
+    const num     = getDinnerNumber(d);
+    const summary = `Madklub #${num} \u2014 ${d.chefs.join(' & ')}`;
+    const desc    = d.location ? `Hos ${d.location}` : '';
+    const lines   = [
+      'BEGIN:VEVENT',
+      `DTSTART:${icsDate(d.date, 18)}`,
+      `DTEND:${icsDate(d.date, 23)}`,
+      foldLine(`SUMMARY:${summary}`),
+      desc ? foldLine(`DESCRIPTION:${desc}`) : null,
+      `UID:madklub-${d.date}@madklubben.com`,
+      'END:VEVENT',
+    ].filter(Boolean);
+    return lines.join('\r\n');
+  }).join('\r\n');
+
+  const cal = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Madklubben//Madklubben//DA',
+    'X-WR-CALNAME:Madklubben',
+    'X-WR-TIMEZONE:Europe/Copenhagen',
+    'CALSCALE:GREGORIAN',
+    events,
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([cal], { type: 'text/calendar;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'madklubben.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────
 // Render immediately with cached localStorage data, then sync from server
 renderHero();
 renderSchedule();
+renderGallery();
 renderMembers();
 tick();
 setInterval(tick, 1000);
@@ -2140,6 +2505,7 @@ handleHash();
     localStorage.setItem('mk_dinners', JSON.stringify(DINNERS));
     renderHero();
     renderSchedule();
+    renderGallery();
   } catch(e) { /* server ikke tilgængelig – bruger localStorage */ }
 })();
 </script>
