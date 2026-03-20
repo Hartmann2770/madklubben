@@ -2870,13 +2870,17 @@ function openGalleryLightbox(date) {
   if (!dinner || !dinner.detaljer) return;
   const det    = dinner.detaljer;
   const photos = [];
-  if (det.gruppe)           photos.push({ src: det.gruppe,           label: 'Holdet' });
+  const gruppePhotos = getGruppePhotos(dinner);
+  gruppePhotos.forEach((src, i) => photos.push({
+    src,
+    label: gruppePhotos.length > 1 ? `Holdet (${i + 1}/${gruppePhotos.length})` : 'Holdet'
+  }));
   if (det.forret?.billede)  photos.push({ src: det.forret.billede,   label: 'Forretten' });
   if (det.hoved?.billede)   photos.push({ src: det.hoved.billede,    label: 'Hovedretten' });
   if (det.dessert?.billede) photos.push({ src: det.dessert.billede,  label: 'Desserten' });
   if (!photos.length) return;
   lbPhotos = photos;
-  lbIndex  = 0;
+  lbIndex  = Math.min(det.gruppeFeatured ?? 0, gruppePhotos.length - 1);
   const num = getDinnerNumber(dinner);
   document.getElementById('lb-num').textContent   = `Madklub #${num} · ${formatShort(dinner.date)}`;
   document.getElementById('lb-chefs').textContent = dinner.chefs.join(' & ');
