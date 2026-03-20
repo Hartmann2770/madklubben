@@ -302,6 +302,8 @@
     }
     .dinner-row:hover { background: var(--surface); }
     .dinner-row.past { opacity: 0.5; }
+    .dinner-row.cancelled { opacity: 0.55; }
+    .dinner-row.cancelled .dr-chef { font-style: italic; color: var(--muted); }
     .dinner-row.is-next {
       background: var(--surface);
       border: 1px solid rgba(0,0,0,0.12);
@@ -345,6 +347,70 @@
       padding: 3px 9px;
       border-radius: 10px;
       font-weight: 600;
+    }
+
+    .dr-cancelled-badge {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8b1818;
+      background: rgba(139,24,24,0.1);
+      border: 1px solid rgba(139,24,24,0.35);
+      padding: 3px 9px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .cancel-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .dinner-row:hover .cancel-btn { opacity: 1; }
+    .cancel-btn.is-cancelled { opacity: 0.7; color: #8b1818; }
+    @media (hover: none) { .cancel-btn { opacity: 0.45; } }
+
+    /* ── DELTAGERE (detaljevisning) ── */
+    .attendees-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 20px 16px;
+      margin-bottom: 36px;
+    }
+    .attendees-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .attendees-groups { display: flex; flex-direction: column; gap: 10px; }
+    .attendees-group-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .attendees-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .attendee-chip {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--muted);
+    }
+    .attendee-chip.confirmed { background: #e8f5e9; border-color: #81c784; color: #2a7a3a; }
+    .attendee-chip.declined  { background: #fdecea; border-color: #e57373; color: #c0392b; }
+    @media (max-width: 600px) {
+      .attendees-section { padding: 16px 14px 12px; }
     }
 
     /* ── ADMIN EDIT ── */
@@ -1883,7 +1949,7 @@ function renderSchedule() {
           : '';
         const num = getDinnerNumber(d);
         const hasPhotos = d.detaljer && (d.detaljer.gruppe || d.detaljer.forret?.billede || d.detaljer.hoved?.billede || d.detaljer.dessert?.billede);
-        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
+        html += `<div class="dinner-row ${past ? 'past' : isNxt ? 'is-next' : ''} ${d.cancelled ? 'cancelled' : ''} ${isMember ? 'admin-clickable' : ''}" ${isMember ? `onclick="openDinnerDetail('${esc(d.date)}')"` : ''}>
           <div class="dr-date"><span class="dr-num">#${num}</span>${formatShort(d.date)}</div>
           <div class="dr-chefs">
             <span class="dr-chef">${chefHtml(d.chefs[0])}</span>
@@ -1893,8 +1959,9 @@ function renderSchedule() {
           ${d.location
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
-          ${isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
+          ${d.cancelled ? '<span class="dr-cancelled-badge">Aflyst</span>' : isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${isMember ? `<span class="dr-photo-badge ${hasPhotos ? 'has-photos' : ''}" title="${hasPhotos ? 'Har billeder' : 'Ingen billeder endnu'}">📸</span>` : ''}
+          ${isAdmin ? `<button class="cancel-btn ${d.cancelled ? 'is-cancelled' : ''}" onclick="event.stopPropagation();toggleCancelled(${idx})" title="${d.cancelled ? 'Genaktiver' : 'Aflys'}">✕</button>` : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
         </div>
         ${rsvpPanel}
@@ -1927,6 +1994,13 @@ function toggleYear(year) {
   renderSchedule();
 }
 
+function toggleCancelled(idx) {
+  DINNERS[idx].cancelled = !DINNERS[idx].cancelled;
+  saveDinners();
+  renderHero();
+  renderSchedule();
+}
+
 function startEdit(idx) {
   editingIndex = idx;
   renderSchedule();
@@ -1941,7 +2015,7 @@ function saveDinnerEdit(idx) {
   const chef2    = document.getElementById(`edit-chef2-${idx}`).value.trim();
   const location = document.getElementById(`edit-loc-${idx}`).value.trim();
   if (!date || !chef1 || !chef2) return;
-  DINNERS[idx] = { date, chefs: [chef1, chef2], location, rsvp: DINNERS[idx].rsvp || null, detaljer: DINNERS[idx].detaljer || null };
+  DINNERS[idx] = { date, chefs: [chef1, chef2], location, rsvp: DINNERS[idx].rsvp || null, detaljer: DINNERS[idx].detaljer || null, cancelled: DINNERS[idx].cancelled || false };
   saveDinners();
   editingIndex = -1;
   renderHero();
@@ -2255,6 +2329,26 @@ function goBack() {
   setTimeout(() => document.getElementById('program').scrollIntoView({ behavior: 'smooth' }), 50);
 }
 
+function renderAttendees(dinner) {
+  if (!dinner.rsvp) return '';
+  const confirmed = Object.entries(dinner.rsvp).filter(([, e]) => e.status === 'confirmed').map(([n]) => n);
+  const declined  = Object.entries(dinner.rsvp).filter(([, e]) => e.status === 'declined').map(([n]) => n);
+  const pending   = Object.entries(dinner.rsvp).filter(([, e]) => e.status === 'pending').map(([n]) => n);
+  const group = (label, names, cls) => names.length ? `
+    <div>
+      <div class="attendees-group-label">${label} (${names.length})</div>
+      <div class="attendees-chips">${names.map(n => `<span class="attendee-chip ${cls}">${esc(n)}</span>`).join('')}</div>
+    </div>` : '';
+  return `<div class="attendees-section">
+    <div class="attendees-label">Deltagere</div>
+    <div class="attendees-groups">
+      ${group('Deltog', confirmed, 'confirmed')}
+      ${group('Meldte afbud', declined, 'declined')}
+      ${group('Svarede ikke', pending, '')}
+    </div>
+  </div>`;
+}
+
 function renderDinnerDetail(dinner) {
   const num  = getDinnerNumber(dinner);
   const det  = dinner.detaljer || {};
@@ -2330,7 +2424,8 @@ function renderDinnerDetail(dinner) {
     <button class="detail-back-btn" onclick="goBack()">← Tilbage til program</button>
     <div><div class="detail-ornament">Madklub &nbsp;<span style="font-weight:700">N° ${num}</span></div></div>
     <div class="detail-title">${formatLong(dinner.date)}</div>
-    <div class="detail-meta"><span>🧑‍🍳 ${chefs}</span>${loc}</div>
+    <div class="detail-meta"><span>🧑‍🍳 ${chefs}</span>${loc}${dinner.cancelled ? '<span style="color:#8b1818;background:rgba(139,24,24,0.1);border:1px solid rgba(139,24,24,0.35);border-radius:10px;padding:3px 10px;font-size:11px;letter-spacing:0.12em;font-weight:600;text-transform:uppercase;">Aflyst</span>' : ''}</div>
+    ${renderAttendees(dinner)}
     ${ctaBanner}
     <div class="detail-group-section">
       <div class="detail-section-label">Holdet</div>
