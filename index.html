@@ -1971,10 +1971,10 @@ function renderSchedule() {
             <span class="dr-amp">&amp;</span>
             <span class="dr-chef">${chefHtml(d.chefs[1])}</span>
           </div>
+          ${d.cancelled ? '<span class="dr-cancelled-badge">Aflyst</span>' : isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${d.location
               ? `<span class="dr-location">🏠 ${esc(d.location)}</span>`
               : !past ? `<span class="dr-location" style="opacity:0.4">Sted TBD</span>` : ''}
-          ${d.cancelled ? '<span class="dr-cancelled-badge">Aflyst</span>' : isNxt ? '<span class="dr-badge">Næste madklub</span>' : ''}
           ${hasPhotos ? `<span class="dr-photo-badge" title="Har billeder">📸</span>` : ''}
           ${isAdmin ? `<button class="cancel-btn ${d.cancelled ? 'is-cancelled' : ''}" onclick="event.stopPropagation();toggleCancelled(${idx})" title="${d.cancelled ? 'Genaktiver' : 'Aflys'}">✕</button>` : ''}
           ${isAdmin ? `<button class="edit-btn" onclick="event.stopPropagation();startEdit(${idx})" title="Rediger">✎</button>` : ''}
