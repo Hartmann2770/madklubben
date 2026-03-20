@@ -442,7 +442,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dinners = file_exists($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
         foreach ($dinners as &$d) {
             if ($d['date'] !== $dinnerDate) continue;
-            $bilder = $d['detaljer']['gruppebilder'] ?? [];
+            // Migrer gammelt enkelt-billede til array hvis nødvendigt
+            if (!isset($d['detaljer']['gruppebilder'])) {
+                $d['detaljer']['gruppebilder'] = isset($d['detaljer']['gruppe']) ? [$d['detaljer']['gruppe']] : [];
+                unset($d['detaljer']['gruppe']);
+            }
+            $bilder = $d['detaljer']['gruppebilder'];
             if (!isset($bilder[$idx])) { http_response_code(400); echo json_encode(['error' => 'Ugyldigt index']); exit; }
             $pathToDelete = __DIR__ . '/' . preg_replace('/\?.*$/', '', $bilder[$idx]);
             if (file_exists($pathToDelete)) @unlink($pathToDelete);
