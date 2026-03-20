@@ -1397,7 +1397,7 @@
 <div class="section" id="program">
   <div class="s-eyebrow">Kalender</div>
   <h2 class="s-title">Kommende Madklubber</h2>
-  <button class="ical-btn" onclick="downloadIcal()" title="Download .ics-fil til Google Kalender, Apple Kalender m.m.">
+  <button class="ical-btn" onclick="openIcalModal()" title="Abonnér på madklub-kalenderen">
     📅 Tilføj til kalender
   </button>
   <div id="schedule"></div>
@@ -1474,6 +1474,34 @@
   <button class="lb-nav" id="lb-next" onclick="navigateLightbox(1)">›</button>
   <div class="lb-type-label" id="lb-type"></div>
   <div class="lb-footer" id="lb-thumbs"></div>
+</div>
+
+<!-- ICAL MODAL -->
+<div id="ical-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 32px;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,0.15);">
+    <h2 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent);margin-bottom:8px;">Tilføj til kalender</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">Kopier linket og abonnér — så opdaterer din kalender sig selv automatisk når nye middage tilføjes.</p>
+
+    <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Abonnements-link</div>
+    <div style="display:flex;gap:8px;margin-bottom:24px;">
+      <input id="ical-url" type="text" readonly
+        style="flex:1;background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;min-width:0;">
+      <button onclick="copyIcalUrl()" id="ical-copy-btn"
+        style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;">
+        Kopiér
+      </button>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+      <strong style="color:var(--text);">Google Kalender:</strong> Åbn Google Kalender → Andre kalendere → Fra URL → Indsæt link<br>
+      <strong style="color:var(--text);">Apple Kalender:</strong> Fil → Nyt kalenderabonnement → Indsæt link
+    </div>
+
+    <button onclick="closeIcalModal()"
+      style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Inter',sans-serif;font-size:14px;cursor:pointer;">
+      Luk
+    </button>
+  </div>
 </div>
 
 <!-- LOGIN MODAL -->
@@ -2418,58 +2446,30 @@ document.getElementById('lightbox').addEventListener('click', e => {
   if (e.target === document.getElementById('lightbox')) closeLightbox();
 });
 
-// ── ICAL DOWNLOAD ────────────────────────────────────────────────────
-function downloadIcal() {
-  const upcoming = DINNERS.filter(d => !isPast(d.date));
-  if (!upcoming.length) { alert('Ingen kommende middage at tilføje.'); return; }
-
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function icsDate(dateStr, hour) {
-    const [y, m, d] = dateStr.split('-');
-    return `${y}${m}${d}T${pad(hour)}0000`;
-  }
-  function foldLine(line) {
-    const chunks = [];
-    while (line.length > 75) { chunks.push(line.slice(0, 75)); line = ' ' + line.slice(75); }
-    chunks.push(line);
-    return chunks.join('\r\n');
-  }
-
-  const events = upcoming.map(d => {
-    const num     = getDinnerNumber(d);
-    const summary = `Madklub #${num} \u2014 ${d.chefs.join(' & ')}`;
-    const desc    = d.location ? `Hos ${d.location}` : '';
-    const lines   = [
-      'BEGIN:VEVENT',
-      `DTSTART:${icsDate(d.date, 18)}`,
-      `DTEND:${icsDate(d.date, 23)}`,
-      foldLine(`SUMMARY:${summary}`),
-      desc ? foldLine(`DESCRIPTION:${desc}`) : null,
-      `UID:madklub-${d.date}@madklubben.com`,
-      'END:VEVENT',
-    ].filter(Boolean);
-    return lines.join('\r\n');
-  }).join('\r\n');
-
-  const cal = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Madklubben//Madklubben//DA',
-    'X-WR-CALNAME:Madklubben',
-    'X-WR-TIMEZONE:Europe/Copenhagen',
-    'CALSCALE:GREGORIAN',
-    events,
-    'END:VCALENDAR',
-  ].join('\r\n');
-
-  const blob = new Blob([cal], { type: 'text/calendar;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'madklubben.ics';
-  a.click();
-  URL.revokeObjectURL(url);
+// ── ICAL MODAL ───────────────────────────────────────────────────────
+function openIcalModal() {
+  const url = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'kalender.php';
+  document.getElementById('ical-url').value = url;
+  document.getElementById('ical-copy-btn').textContent = 'Kopiér';
+  document.getElementById('ical-modal').style.display = 'flex';
 }
+function closeIcalModal() {
+  document.getElementById('ical-modal').style.display = 'none';
+}
+function copyIcalUrl() {
+  const input = document.getElementById('ical-url');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('ical-copy-btn');
+    btn.textContent = '✓ Kopieret';
+    setTimeout(() => { btn.textContent = 'Kopiér'; }, 2000);
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+  });
+}
+document.getElementById('ical-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('ical-modal')) closeIcalModal();
+});
 
 // ── INIT ─────────────────────────────────────────────────────────────
 // Render immediately with cached localStorage data, then sync from server
