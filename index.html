@@ -2831,7 +2831,7 @@ function renderGallery() {
   }
   const withPhotos = [...DINNERS]
     .filter(d => isPast(d.date) && d.detaljer && (
-      d.detaljer.gruppe ||
+      getGruppePhotos(d).length ||
       d.detaljer.forret?.billede ||
       d.detaljer.hoved?.billede  ||
       d.detaljer.dessert?.billede
@@ -2843,8 +2843,10 @@ function renderGallery() {
     return;
   }
   const cards = withPhotos.map(d => {
-    const det   = d.detaljer;
-    const thumb = det.gruppe || det.forret?.billede || det.hoved?.billede || det.dessert?.billede;
+    const det    = d.detaljer;
+    const photos = getGruppePhotos(d);
+    const featured = photos.length ? photos[det.gruppeFeatured ?? 0] ?? photos[0] : null;
+    const thumb  = featured || det.forret?.billede || det.hoved?.billede || det.dessert?.billede;
     const num   = getDinnerNumber(d);
     const chefs = d.chefs.map(c => esc(c)).join(' & ');
     return `<div class="gallery-card" onclick="openGalleryLightbox('${esc(d.date)}')">
