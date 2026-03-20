@@ -2472,7 +2472,7 @@ function renderDinnerDetail(dinner) {
 
   const _d = dinner.date;
   const gruppePhotos = getGruppePhotos(dinner);
-  const gruppeIdx = Math.min(_gruppeIdx[_d] ?? 0, Math.max(0, gruppePhotos.length - 1));
+  const gruppeIdx = Math.min(_gruppeIdx[_d] ?? (det.gruppeFeatured ?? 0), Math.max(0, gruppePhotos.length - 1));
   const gruppeFeatured = det.gruppeFeatured ?? 0;
   const groupHtml = gruppePhotos.length
     ? `<div class="gruppe-carousel" id="gruppe-carousel-${_d}">
