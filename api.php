@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Engangs-migration: historiske RSVP-data for 2025-05-03
     $changed = false;
     foreach ($dinners as &$d) {
-        if ($d['date'] === '2025-05-03' && empty($d['rsvp'])) {
+        if ($d['date'] === '2025-05-03' && (empty($d['rsvp']) || !isset($d['rsvp']['Mekanikeren']))) {
             $d['rsvp'] = [
                 'Frøding'     => ['token' => '', 'status' => 'confirmed'],
                 'Cronstjerne' => ['token' => '', 'status' => 'confirmed'],
@@ -92,6 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'Bisp'        => ['token' => '', 'status' => 'confirmed'],
                 'Larsen'      => ['token' => '', 'status' => 'confirmed'],
                 'Hartmann'    => ['token' => '', 'status' => 'confirmed'],
+                'Mekanikeren' => ['token' => '', 'status' => 'confirmed'],
+                'Rifsdal'     => ['token' => '', 'status' => 'confirmed'],
             ];
             $changed = true;
         }
