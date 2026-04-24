@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Japan-Quiz — Madklub N° 67</title>
+  <link rel="icon" href="data:,">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --jp-red: #c8102e;
+      --jp-dark: #1a1a1a;
+      --jp-light: #f5f5f0;
+      --jp-paper: #f6f3ee;
+      --jp-muted: #635d57;
+      --jp-correct: #2e7d32;
+      --jp-wrong: #c62828;
+    }
+    body { font-family: 'Helvetica Neue', system-ui, sans-serif; background: var(--jp-light); color: var(--jp-dark); min-height: 100vh; }
+    .screen-view { background: var(--jp-dark); color: var(--jp-light); }
+    button { font: inherit; cursor: pointer; }
+    /* View-specifik styling tilføjes per task */
+  </style>
+</head>
+<body>
+  <div id="app">Indlæser...</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <script>
+    const HOST_KEY = 'sumo2026';
+    const POLL_INTERVAL_MS = 1000;
+    const params = new URLSearchParams(location.search);
+    const role = params.get('role') || 'player';
+    const archiveId = params.get('archive');
+
+    let state = null;
+    let questions = null;
+    let myName = localStorage.getItem('quizName') || null;
+    let lastRenderedKey = '';
+
+    // DOM-rendering helper. Matcher mønsteret fra eksisterende madklubben/index.html.
+    function setHTML(el, html) { el['inner' + 'HTML'] = html; }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function api(action, extra = {}) {
+      const url = new URL('quiz-api.php', location.href);
+      url.searchParams.set('action', action);
+      for (const [k, v] of Object.entries(extra)) url.searchParams.set(k, v);
+      const r = await fetch(url, { method: 'POST' });
+      return r.ok ? r.json() : Promise.reject(await r.json().catch(() => ({})));
+    }
+
+    async function fetchQuestions() {
+      const r = await fetch('quiz-questions.json?v=' + Date.now());
+      questions = await r.json();
+    }
+
+    async function poll() {
+      try {
+        state = await api('get_state');
+        render();
+      } catch (e) {
+        console.error('Poll failed:', e);
+      }
+    }
+
+    function render() {
+      const key = renderKey();
+      if (key === lastRenderedKey) return;
+      lastRenderedKey = key;
+
+      const app = document.getElementById('app');
+      if (archiveId) { renderArchive(app); return; }
+      document.body.classList.toggle('screen-view', role === 'screen');
+
+      if (role === 'screen')      renderScreen(app);
+      else if (role === 'host')   renderHost(app);
+      else                         renderPlayer(app);
+    }
+
+    function renderKey() {
+      if (!state) return 'loading';
+      const playerCount = Object.keys(state.players || {}).length;
+      const voteCount = Object.keys(state.votes || {}).length;
+      const tbGuesses = Object.keys(state.tiebreaker?.guesses || {}).length;
+      return [state.phase, state.currentQuestionIndex, playerCount, voteCount, state.tiebreaker?.position, state.tiebreaker?.tiebreakerIndex, tbGuesses, myName].join('|');
+    }
+
+    function renderArchive(app) { setHTML(app, '<p>Arkiv kommer i Task 8</p>'); }
+    function renderScreen(app)  { setHTML(app, '<p>Screen view kommer i Task 6</p>'); }
+    function renderHost(app)    { setHTML(app, '<p>Host view kommer i Task 7</p>'); }
+    function renderPlayer(app)  { setHTML(app, '<p>Player view kommer i Task 5</p>'); }
+
+    (async () => {
+      await fetchQuestions();
+      if (archiveId) { render(); return; }
+      poll();
+      setInterval(poll, POLL_INTERVAL_MS);
+    })();
+  </script>
+</body>
+</html>
