@@ -200,6 +200,188 @@ switch ($action) {
     respond_state();
     break;
 
+  case 'vote':
+    $state = load_state();
+    if ($state['phase'] !== 'question') {
+      http_response_code(400);
+      echo json_encode(['error' => 'voting_closed']);
+      exit;
+    }
+    $name = $_REQUEST['name'] ?? '';
+    $choice = isset($_REQUEST['choice']) ? (int)$_REQUEST['choice'] : -1;
+    if ($name === '' || $choice < 0 || $choice > 3) {
+      http_response_code(400);
+      echo json_encode(['error' => 'invalid_vote']);
+      exit;
+    }
+    if (!isset($state['players'][$name])) {
+      http_response_code(400);
+      echo json_encode(['error' => 'unknown_player']);
+      exit;
+    }
+    if (is_object($state['votes'])) {
+      $state['votes'] = (array)$state['votes'];
+    }
+    $state['votes'][$name] = [
+      'choice' => $choice,
+      'answeredAt' => time(),
+    ];
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'start_tiebreaker':
+    require_host();
+    $state = load_state();
+    if ($state['phase'] !== 'ended' && $state['phase'] !== 'tiebreaker-result') {
+      http_response_code(400);
+      echo json_encode(['error' => 'wrong_phase']);
+      exit;
+    }
+    $position = (int)($_REQUEST['position'] ?? 1);
+    $playerNames = explode(',', $_REQUEST['players'] ?? '');
+    $playerNames = array_filter(array_map('trim', $playerNames));
+    if (count($playerNames) < 2) {
+      http_response_code(400);
+      echo json_encode(['error' => 'need_2_or_more_players']);
+      exit;
+    }
+    $state['tiebreaker'] = [
+      'active' => true,
+      'tiebreakerIndex' => $state['tiebreaker']['tiebreakerIndex'] ?? 0,
+      'position' => $position,
+      'playerNames' => array_values($playerNames),
+      'guesses' => new stdClass(),
+      'shownAt' => time(),
+    ];
+    $state['phase'] = 'tiebreaker';
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'tiebreaker_vote':
+    $state = load_state();
+    if ($state['phase'] !== 'tiebreaker' || !$state['tiebreaker']['active']) {
+      http_response_code(400);
+      echo json_encode(['error' => 'no_tiebreaker']);
+      exit;
+    }
+    $name = $_REQUEST['name'] ?? '';
+    $guess = $_REQUEST['guess'] ?? null;
+    if (!in_array($name, $state['tiebreaker']['playerNames'])) {
+      http_response_code(400);
+      echo json_encode(['error' => 'not_in_tiebreaker']);
+      exit;
+    }
+    if (!is_numeric($guess)) {
+      http_response_code(400);
+      echo json_encode(['error' => 'invalid_guess']);
+      exit;
+    }
+    if (is_object($state['tiebreaker']['guesses'])) {
+      $state['tiebreaker']['guesses'] = (array)$state['tiebreaker']['guesses'];
+    }
+    $state['tiebreaker']['guesses'][$name] = [
+      'guess' => (float)$guess,
+      'answeredAt' => time(),
+    ];
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'show_tiebreaker_result':
+    require_host();
+    $state = load_state();
+    $tiebreakers = load_questions()['tiebreakers'];
+    $tb = $tiebreakers[$state['tiebreaker']['tiebreakerIndex']];
+    $correct = $tb['answer'];
+
+    // Find vinder: tætteste afstand, ved tie den der svarede først
+    $best = null;
+    $guesses = (array)$state['tiebreaker']['guesses'];
+    foreach ($state['tiebreaker']['playerNames'] as $name) {
+      if (!isset($guesses[$name])) continue;
+      $g = $guesses[$name];
+      $dist = abs($g['guess'] - $correct);
+      if ($best === null || $dist < $best['dist'] || ($dist === $best['dist'] && $g['answeredAt'] < $best['answeredAt'])) {
+        $best = ['name' => $name, 'dist' => $dist, 'answeredAt' => $g['answeredAt']];
+      }
+    }
+
+    // Arkiver tiebreaker-runden
+    if (!isset($state['tiebreakerHistory'])) $state['tiebreakerHistory'] = [];
+    $state['tiebreakerHistory'][] = [
+      'tiebreakerId' => $tb['id'],
+      'position' => $state['tiebreaker']['position'],
+      'playerNames' => $state['tiebreaker']['playerNames'],
+      'guesses' => $state['tiebreaker']['guesses'],
+      'correct' => $correct,
+      'winner' => $best ? $best['name'] : null,
+    ];
+
+    // Track tiebreaker-wins separat så hovedpoint ikke ændres visuelt
+    if ($best) {
+      $name = $best['name'];
+      if (!isset($state['players'][$name]['tiebreakerWins'])) {
+        $state['players'][$name]['tiebreakerWins'] = 0;
+      }
+      $state['players'][$name]['tiebreakerWins'] += 1;
+    }
+
+    $state['phase'] = 'tiebreaker-result';
+    $state['tiebreaker']['active'] = false;
+    $state['tiebreaker']['winner'] = $best ? $best['name'] : null;
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'next_tiebreaker':
+    require_host();
+    $state = load_state();
+    $state['tiebreaker']['tiebreakerIndex'] = ($state['tiebreaker']['tiebreakerIndex'] ?? 0) + 1;
+    $state['tiebreaker']['active'] = true;
+    $state['tiebreaker']['guesses'] = new stdClass();
+    $state['tiebreaker']['shownAt'] = time();
+    $state['phase'] = 'tiebreaker';
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'end_tiebreaker':
+    require_host();
+    $state = load_state();
+    $state['phase'] = 'ended';
+    $state['tiebreaker']['active'] = false;
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'finish_quiz':
+    require_host();
+    $state = load_state();
+    $questions = load_questions();
+    $archive = [
+      'dinnerNumber' => 67,
+      'theme' => 'Japan',
+      'finishedAt' => date('c'),
+      'players' => $state['players'],
+      'questions' => $questions['questions'],
+      'votesHistory' => $state['votesHistory'],
+      'tiebreakerQuestions' => $questions['tiebreakers'],
+      'tiebreakerHistory' => $state['tiebreakerHistory'] ?? [],
+    ];
+    file_put_contents(ARCHIVE_FILE, json_encode($archive, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    $state['phase'] = 'archived';
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'reset':
+    require_host();
+    if (file_exists(STATE_FILE)) unlink(STATE_FILE);
+    echo json_encode(initial_state());
+    exit;
+
   default:
     http_response_code(400);
     echo json_encode(['error' => 'unknown_action']);
