@@ -2510,6 +2510,15 @@ function renderDinnerDetail(dinner) {
          style="display:inline-block;background:#c8102e;color:white;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:700;letter-spacing:.05em;font-size:14px;box-shadow:0 2px 6px rgba(200,16,46,0.25)">
         🎌 JAPAN-QUIZ
       </a>
+      ${isAdmin ? `
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          <a href="/quiz.html?role=host&key=sumo2026" target="_blank" rel="noopener"
+             style="color:#c8102e;text-decoration:none;border-bottom:1px dashed rgba(200,16,46,0.4);padding-bottom:1px">
+            🎮 Åbn host-kontrol
+          </a>
+          <span style="margin:0 6px;opacity:.4">·</span>
+          <span style="opacity:.7">kun synlig for admin</span>
+        </div>` : ''}
     </div>` : '';
 
   // Conditionally swap to archive view if quiz is finished
