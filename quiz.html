@@ -313,7 +313,7 @@
             <h3>Spørgsmål ${idx + 1}</h3>
             <div class="host-info" style="font-weight:700;color:var(--jp-dark);font-size:1em">${esc(q.question)}</div>
             <div class="host-info">Svar: ${voted}/${total}</div>
-            <button class="host-btn" data-action="close_voting">🔒 Luk afstemning</button>
+            <button class="host-btn primary" data-action="show_result">📊 Luk afstemning og vis resultat</button>
           </div>
         `;
       } else if (phase === 'voting-closed') {
@@ -329,7 +329,7 @@
         body += `
           <div class="host-section">
             <h3>Resultat vist</h3>
-            <div class="host-info">Rigtigt svar: <strong>${esc(q.options[q.correct])}</strong></div>
+            <div class="host-info">Rigtigt svar: <strong>${String.fromCharCode(65 + q.correct)}: ${esc(q.options[q.correct])}</strong></div>
             <button class="host-btn primary" data-action="next_question">${isLast ? '🏁 Afslut quiz' : '➡ Næste spørgsmål'}</button>
           </div>
           <div class="host-section">
@@ -580,7 +580,8 @@
 
     function renderPlayer(app) {
       const phase = state.phase;
-      if (!myName) return renderPlayerJoin(app);
+      // Hvis spilleren er gået tabt fra serveren (fx efter reset), tilbage til navne-vælger
+      if (!myName || (phase === 'lobby' && !state.players?.[myName])) return renderPlayerJoin(app);
 
       switch (phase) {
         case 'lobby': return renderPlayerWaiting(app, 'Du er med! Venter på at quizzen starter.');
@@ -675,7 +676,7 @@
           <div class="status-msg">
             <div style="font-size:3em;margin-bottom:10px">${wasCorrect ? '✅' : '❌'}</div>
             <div style="font-weight:700;margin-bottom:8px">${wasCorrect ? 'Korrekt!' : 'Forkert'}</div>
-            <div>Rigtigt svar: <strong>${esc(q.options[correct])}</strong></div>
+            <div>Rigtigt svar: <strong>${String.fromCharCode(65 + correct)}: ${esc(q.options[correct])}</strong></div>
             <div style="margin-top:20px;color:var(--jp-muted)">Din score: ${state.players?.[myName]?.score ?? 0}</div>
           </div>
         </div>
