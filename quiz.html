@@ -40,6 +40,47 @@
     .podium-name { flex: 1; font-weight: 700; }
     .podium-score { color: var(--jp-muted); }
     .tb-input { width: 100%; padding: 18px; border: 2px solid var(--jp-red); border-radius: 12px; font-size: 1.4em; text-align: center; margin-bottom: 14px; }
+    .screen-wrap { max-width: 1400px; margin: 0 auto; padding: 40px 60px; min-height: 100vh; display: flex; flex-direction: column; }
+    .screen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: .9em; letter-spacing: .2em; text-transform: uppercase; opacity: .7; }
+    .screen-kanji { font-family: serif; opacity: .3; position: fixed; pointer-events: none; }
+    .screen-kanji.tl { top: 20px; left: 30px; font-size: 4em; }
+    .screen-kanji.br { bottom: 20px; right: 30px; font-size: 4em; }
+    .lobby-flag { display: block; width: 180px; height: 120px; margin: 0 auto 30px; background: white; border-radius: 8px; position: relative; }
+    .lobby-flag::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: var(--jp-red); border-radius: 50%; }
+    .lobby-title { text-align: center; font-size: 3.5em; font-weight: 800; margin-bottom: 10px; letter-spacing: .05em; }
+    .lobby-subtitle { text-align: center; font-size: 1.4em; opacity: .7; margin-bottom: 50px; }
+    .lobby-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .lobby-qr-wrap { text-align: center; }
+    .lobby-qr { background: white; padding: 20px; display: inline-block; border-radius: 12px; }
+    .lobby-url { font-family: monospace; font-size: 1.6em; margin-top: 20px; opacity: .9; }
+    .lobby-players h3 { font-size: 1.4em; margin-bottom: 16px; opacity: .7; letter-spacing: .1em; text-transform: uppercase; }
+    .lobby-players ul { list-style: none; font-size: 1.5em; line-height: 1.6; }
+    .lobby-players li::before { content: '● '; color: var(--jp-red); }
+    .q-counter { text-align: center; font-size: 1.3em; opacity: .6; margin-bottom: 20px; letter-spacing: .15em; text-transform: uppercase; }
+    .q-text { font-size: 2.6em; font-weight: 700; text-align: center; line-height: 1.3; padding: 30px 0; border-top: 2px solid #444; border-bottom: 2px solid #444; margin-bottom: 40px; }
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 1.7em; margin-bottom: 30px; }
+    .q-option { background: #2a2a2a; padding: 20px 24px; border-left: 4px solid var(--jp-red); position: relative; }
+    .q-option .letter { color: var(--jp-red); font-weight: 800; margin-right: 14px; }
+    .q-option.correct { background: #1f3d1f; border-left-color: var(--jp-correct); }
+    .q-option.correct::after { content: '✓'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%); color: var(--jp-correct); font-size: 1.5em; font-weight: 700; }
+    .vote-tracker { font-size: 1.1em; opacity: .8; text-align: center; }
+    .vote-tracker .missing { color: var(--jp-red); }
+    .result-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 1.1em; }
+    .result-bar { background: #2a2a2a; padding: 14px 20px; border-radius: 8px; }
+    .result-bar.correct { background: #1f3d1f; }
+    .result-bar .bar-label { font-weight: 700; margin-bottom: 8px; }
+    .result-bar .bar-fill { height: 8px; background: var(--jp-red); border-radius: 4px; margin-bottom: 6px; }
+    .result-bar.correct .bar-fill { background: var(--jp-correct); }
+    .result-bar .bar-names { opacity: .7; font-size: .9em; }
+    .podium-screen { max-width: 700px; margin: 60px auto 0; }
+    .podium-screen .podium-row { background: #2a2a2a; padding: 24px 28px; margin-bottom: 14px; border-radius: 12px; display: flex; align-items: center; font-size: 1.6em; border-left: 6px solid; }
+    .podium-screen .podium-row:nth-child(1) { border-left-color: gold; font-size: 2em; }
+    .podium-screen .podium-row:nth-child(2) { border-left-color: silver; font-size: 1.8em; }
+    .podium-screen .podium-row:nth-child(3) { border-left-color: #cd7f32; }
+    .podium-screen .podium-medal { font-size: 1.4em; margin-right: 20px; }
+    .podium-screen .podium-name { flex: 1; font-weight: 700; }
+    .podium-screen .podium-score { opacity: .7; }
+    .fastest { text-align: center; margin-top: 30px; opacity: .7; font-size: 1.1em; }
   </style>
 </head>
 <body>
@@ -111,8 +152,168 @@
     }
 
     function renderArchive(app) { setHTML(app, '<p>Arkiv kommer i Task 8</p>'); }
-    function renderScreen(app)  { setHTML(app, '<p>Screen view kommer i Task 6</p>'); }
     function renderHost(app)    { setHTML(app, '<p>Host view kommer i Task 7</p>'); }
+
+    function renderScreen(app) {
+      const phase = state.phase;
+      let body = '';
+      switch (phase) {
+        case 'lobby': body = screenLobby(); break;
+        case 'question':
+        case 'voting-closed':
+          body = screenQuestion(); break;
+        case 'result': body = screenResult(); break;
+        case 'tiebreaker': body = screenTiebreaker(); break;
+        case 'tiebreaker-result': body = screenTiebreakerResult(); break;
+        case 'ended':
+        case 'archived':
+          body = screenEnded(); break;
+        default: body = '<div class="status-msg">Indlæser...</div>';
+      }
+      setHTML(app, `
+        <div class="screen-kanji tl">日本</div>
+        <div class="screen-kanji br">問</div>
+        <div class="screen-wrap">
+          <div class="screen-header"><span>JAPAN-QUIZ</span><span>MADKLUB N° 67</span></div>
+          ${body}
+        </div>
+      `);
+
+      const qrEl = document.getElementById('qr-target');
+      if (qrEl && !qrEl.dataset.rendered) {
+        new QRCode(qrEl, { text: location.origin + '/quiz.html', width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+        qrEl.dataset.rendered = '1';
+      }
+    }
+
+    function screenLobby() {
+      const players = Object.keys(state.players || {});
+      return `
+        <div class="lobby-flag"></div>
+        <div class="lobby-title">日本クイズ</div>
+        <div class="lobby-subtitle">Japan-Quiz til Madklub N° 67</div>
+        <div class="lobby-grid">
+          <div class="lobby-qr-wrap">
+            <div class="lobby-qr"><div id="qr-target"></div></div>
+            <div class="lobby-url">${location.host}/quiz.html</div>
+          </div>
+          <div class="lobby-players">
+            <h3>Tilmeldte (${players.length})</h3>
+            <ul>${players.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      `;
+    }
+
+    function screenQuestion() {
+      const q = questions.questions[state.currentQuestionIndex];
+      const totalPlayers = Object.keys(state.players || {}).length;
+      const voted = Object.keys(state.votes || {});
+      const missing = Object.keys(state.players || {}).filter(n => !voted.includes(n));
+      return `
+        <div class="q-counter">Spørgsmål ${state.currentQuestionIndex + 1} / ${questions.questions.length}</div>
+        <div class="q-text">${esc(q.question)}</div>
+        <div class="q-options">
+          ${q.options.map((opt, i) => `
+            <div class="q-option"><span class="letter">${String.fromCharCode(65 + i)}</span>${esc(opt)}</div>
+          `).join('')}
+        </div>
+        <div class="vote-tracker">
+          ${voted.length}/${totalPlayers} har stemt
+          ${missing.length > 0 ? `&nbsp;&nbsp;<span class="missing">mangler: ${missing.map(esc).join(', ')}</span>` : ''}
+        </div>
+      `;
+    }
+
+    function screenResult() {
+      const q = questions.questions[state.currentQuestionIndex];
+      const totalPlayers = Object.keys(state.players || {}).length;
+      const breakdown = q.options.map((_, i) => {
+        const names = Object.entries(state.votes || {}).filter(([_, v]) => v.choice === i).map(([n]) => n);
+        return { count: names.length, names };
+      });
+      return `
+        <div class="q-counter">Resultat — spørgsmål ${state.currentQuestionIndex + 1}</div>
+        <div class="q-text">${esc(q.question)}</div>
+        <div class="result-bars">
+          ${q.options.map((opt, i) => {
+            const b = breakdown[i];
+            const pct = totalPlayers > 0 ? (b.count / totalPlayers * 100) : 0;
+            return `
+              <div class="result-bar ${i === q.correct ? 'correct' : ''}">
+                <div class="bar-label"><span style="color:var(--jp-red);font-weight:800;margin-right:10px">${String.fromCharCode(65+i)}</span>${esc(opt)}</div>
+                <div class="bar-fill" style="width:${pct}%"></div>
+                <div class="bar-names">${b.names.length > 0 ? b.names.map(esc).join(', ') : '—'}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function screenTiebreaker() {
+      const tb = state.tiebreaker;
+      const tbq = questions.tiebreakers[tb.tiebreakerIndex];
+      const voted = Object.keys(tb.guesses || {});
+      const missing = tb.playerNames.filter(n => !voted.includes(n));
+      return `
+        <div class="q-counter">⚔️ Tiebreaker for ${tb.position}. plads</div>
+        <div class="q-text">${esc(tbq.question)}</div>
+        <div style="text-align:center;font-size:1.4em;margin-bottom:24px">
+          ${tb.playerNames.map(esc).join(' &nbsp;vs&nbsp; ')}
+        </div>
+        <div class="vote-tracker">
+          ${voted.length}/${tb.playerNames.length} har svaret
+          ${missing.length > 0 ? `&nbsp;&nbsp;<span class="missing">mangler: ${missing.map(esc).join(', ')}</span>` : ''}
+        </div>
+      `;
+    }
+
+    function screenTiebreakerResult() {
+      const tb = state.tiebreaker;
+      const tbq = questions.tiebreakers[tb.tiebreakerIndex];
+      const correct = tbq.answer;
+      const guesses = Object.entries(tb.guesses || {}).map(([name, g]) => ({
+        name, guess: g.guess, dist: Math.abs(g.guess - correct), answeredAt: g.answeredAt
+      }));
+      guesses.sort((a, b) => a.dist - b.dist || a.answeredAt - b.answeredAt);
+      const winner = tb.winner;
+      return `
+        <div class="q-counter">⚔️ Tiebreaker-resultat</div>
+        <div class="q-text">${esc(tbq.question)}</div>
+        <div style="text-align:center;font-size:2em;margin-bottom:30px">Rigtigt svar: <strong style="color:var(--jp-correct)">${correct.toLocaleString('da-DK')} ${esc(tbq.unit)}</strong></div>
+        <div class="result-bars" style="grid-template-columns:1fr">
+          ${guesses.map(g => `
+            <div class="result-bar ${g.name === winner ? 'correct' : ''}">
+              <div class="bar-label">${esc(g.name)}: <strong>${g.guess.toLocaleString('da-DK')}</strong> <span style="opacity:.6">(${g.dist.toLocaleString('da-DK')} fra)</span></div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="text-align:center;font-size:2em;margin-top:30px">🏆 Vinder: <strong style="color:gold">${esc(winner)}</strong></div>
+      `;
+    }
+
+    function screenEnded() {
+      const podium = computePodium(state.players);
+      const fastest = Object.entries(state.players || {})
+        .filter(([_, p]) => (p.correctCount || 0) > 0)
+        .map(([name, p]) => ({ name, avg: p.totalAnswerTime / p.correctCount }))
+        .sort((a, b) => a.avg - b.avg)[0];
+
+      return `
+        <div class="lobby-title">🏁 SLUT</div>
+        <div class="podium-screen">
+          ${podium.map((p, i) => `
+            <div class="podium-row">
+              <span class="podium-medal">${['🥇','🥈','🥉'][i]}</span>
+              <span class="podium-name">${esc(p.name)}</span>
+              <span class="podium-score">${p.score} point</span>
+            </div>
+          `).join('')}
+        </div>
+        ${fastest ? `<div class="fastest">⚡ Hurtigste finger: <strong>${esc(fastest.name)}</strong> (${fastest.avg.toFixed(1)} sek i snit blandt rigtige svar)</div>` : ''}
+      `;
+    }
 
     const MEMBERS = ['Hartmann','Heide','Gjelsted','Thyregod','Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
 
