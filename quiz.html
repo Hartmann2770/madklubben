@@ -20,6 +20,26 @@
     .screen-view { background: var(--jp-dark); color: var(--jp-light); }
     button { font: inherit; cursor: pointer; }
     /* View-specifik styling tilføjes per task */
+    .player-wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+    .player-title { font-size: 1.4em; font-weight: 700; text-align: center; margin-bottom: 4px; color: var(--jp-red); }
+    .player-subtitle { text-align: center; color: var(--jp-muted); margin-bottom: 24px; font-size: .95em; }
+    .member-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .member-btn { background: white; border: 2px solid #ddd; border-radius: 12px; padding: 18px 8px; font-size: 1.05em; font-weight: 600; min-height: 60px; }
+    .member-btn:hover { border-color: var(--jp-red); }
+    .other-input { width: 100%; padding: 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 1em; margin-bottom: 10px; }
+    .primary-btn { width: 100%; background: var(--jp-red); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1em; font-weight: 700; min-height: 60px; }
+    .choice-btn { display: flex; align-items: center; width: 100%; background: white; border: 3px solid #e0e0e0; border-radius: 14px; padding: 18px 16px; margin-bottom: 12px; font-size: 1.1em; min-height: 70px; text-align: left; }
+    .choice-btn .letter { display: inline-block; width: 32px; height: 32px; border-radius: 50%; background: var(--jp-red); color: white; font-weight: 700; line-height: 32px; text-align: center; margin-right: 14px; flex-shrink: 0; }
+    .choice-btn.selected { border-color: var(--jp-red); background: #fff5f5; }
+    .choice-btn.selected::after { content: '✓'; margin-left: auto; color: var(--jp-red); font-size: 1.4em; font-weight: 700; }
+    .status-msg { text-align: center; color: var(--jp-muted); padding: 40px 20px; font-size: 1.05em; }
+    .podium-list { background: white; border-radius: 14px; padding: 20px; margin-top: 20px; }
+    .podium-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .podium-row:last-child { border-bottom: 0; }
+    .podium-medal { font-size: 1.6em; margin-right: 14px; }
+    .podium-name { flex: 1; font-weight: 700; }
+    .podium-score { color: var(--jp-muted); }
+    .tb-input { width: 100%; padding: 18px; border: 2px solid var(--jp-red); border-radius: 12px; font-size: 1.4em; text-align: center; margin-bottom: 14px; }
   </style>
 </head>
 <body>
@@ -93,7 +113,167 @@
     function renderArchive(app) { setHTML(app, '<p>Arkiv kommer i Task 8</p>'); }
     function renderScreen(app)  { setHTML(app, '<p>Screen view kommer i Task 6</p>'); }
     function renderHost(app)    { setHTML(app, '<p>Host view kommer i Task 7</p>'); }
-    function renderPlayer(app)  { setHTML(app, '<p>Player view kommer i Task 5</p>'); }
+
+    const MEMBERS = ['Hartmann','Heide','Gjelsted','Thyregod','Bisp','Cronstjerne','Frøding','Rifsdal','Larsen','Mekanikeren'];
+
+    function renderPlayer(app) {
+      const phase = state.phase;
+      if (!myName) return renderPlayerJoin(app);
+
+      switch (phase) {
+        case 'lobby': return renderPlayerWaiting(app, 'Du er med! Venter på at quizzen starter.');
+        case 'question': return renderPlayerVoting(app);
+        case 'voting-closed': return renderPlayerWaiting(app, 'Afstemning lukket. Venter på resultat...');
+        case 'result': return renderPlayerResult(app);
+        case 'tiebreaker': return renderPlayerTiebreaker(app);
+        case 'tiebreaker-result': return renderPlayerWaiting(app, 'Tiebreaker-resultat på storskærmen...');
+        case 'ended':
+        case 'archived': return renderPlayerEnded(app);
+        default: return renderPlayerWaiting(app, 'Venter...');
+      }
+    }
+
+    function renderPlayerJoin(app) {
+      const taken = new Set(Object.keys(state.players || {}));
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="player-title">🎌 JAPAN-QUIZ</div>
+          <div class="player-subtitle">Vælg dit navn for at deltage</div>
+          <div class="member-grid">
+            ${MEMBERS.map(m => `<button class="member-btn" ${taken.has(m) ? 'disabled style="opacity:.4"' : ''} data-name="${esc(m)}">${esc(m)}</button>`).join('')}
+          </div>
+          <input class="other-input" id="other-name" placeholder="Andet navn (gæst)">
+          <button class="primary-btn" id="other-join">Hop med</button>
+        </div>
+      `);
+      app.querySelectorAll('.member-btn:not([disabled])').forEach(b => {
+        b.onclick = () => joinAs(b.dataset.name);
+      });
+      app.querySelector('#other-join').onclick = () => {
+        const n = app.querySelector('#other-name').value.trim();
+        if (n) joinAs(n);
+      };
+    }
+
+    async function joinAs(name) {
+      try {
+        await api('join', { name });
+        myName = name;
+        localStorage.setItem('quizName', name);
+        lastRenderedKey = '';
+        poll();
+      } catch (e) { alert('Kunne ikke tilmelde: ' + (e.error || 'fejl')); }
+    }
+
+    function renderPlayerWaiting(app, msg) {
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="player-title">🎌 ${esc(myName)}</div>
+          <div class="status-msg">${esc(msg)}</div>
+        </div>
+      `);
+    }
+
+    function renderPlayerVoting(app) {
+      const q = questions.questions[state.currentQuestionIndex];
+      const myVote = state.votes?.[myName]?.choice;
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="player-subtitle">Spørgsmål ${state.currentQuestionIndex + 1} af ${questions.questions.length}</div>
+          <div style="font-weight:700;font-size:1.15em;margin-bottom:18px;line-height:1.4">${esc(q.question)}</div>
+          ${q.options.map((opt, i) => `
+            <button class="choice-btn ${myVote === i ? 'selected' : ''}" data-choice="${i}">
+              <span class="letter">${String.fromCharCode(65 + i)}</span>
+              <span>${esc(opt)}</span>
+            </button>
+          `).join('')}
+          <div style="text-align:center;color:var(--jp-muted);margin-top:14px;font-size:.9em">Du kan ændre dit svar indtil host lukker afstemningen</div>
+        </div>
+      `);
+      app.querySelectorAll('.choice-btn').forEach(b => {
+        b.onclick = () => vote(parseInt(b.dataset.choice));
+      });
+    }
+
+    async function vote(choice) {
+      try {
+        await api('vote', { name: myName, choice });
+        lastRenderedKey = '';
+        poll();
+      } catch (e) { console.error('Vote failed:', e); }
+    }
+
+    function renderPlayerResult(app) {
+      const q = questions.questions[state.currentQuestionIndex];
+      const myVote = state.votes?.[myName]?.choice;
+      const correct = q.correct;
+      const wasCorrect = myVote === correct;
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="status-msg">
+            <div style="font-size:3em;margin-bottom:10px">${wasCorrect ? '✅' : '❌'}</div>
+            <div style="font-weight:700;margin-bottom:8px">${wasCorrect ? 'Korrekt!' : 'Forkert'}</div>
+            <div>Rigtigt svar: <strong>${esc(q.options[correct])}</strong></div>
+            <div style="margin-top:20px;color:var(--jp-muted)">Din score: ${state.players?.[myName]?.score ?? 0}</div>
+          </div>
+        </div>
+      `);
+    }
+
+    function renderPlayerTiebreaker(app) {
+      const tb = state.tiebreaker;
+      const inTie = tb.playerNames.includes(myName);
+      if (!inTie) {
+        return renderPlayerWaiting(app, `Tiebreaker: ${tb.playerNames.join(' vs ')}`);
+      }
+      const tbq = questions.tiebreakers[tb.tiebreakerIndex];
+      const myGuess = tb.guesses?.[myName]?.guess;
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="player-title">⚔️ TIEBREAKER</div>
+          <div class="player-subtitle">For ${tb.position}. plads</div>
+          <div style="font-weight:700;font-size:1.1em;margin:20px 0;line-height:1.4">${esc(tbq.question)}</div>
+          <input class="tb-input" id="tb-guess" type="number" inputmode="numeric" placeholder="Dit gæt" value="${myGuess ?? ''}">
+          <button class="primary-btn" id="tb-submit">Send svar</button>
+          ${myGuess !== undefined ? '<div style="text-align:center;margin-top:12px;color:var(--jp-muted)">Svar sendt — du kan ændre indtil host viser resultatet</div>' : ''}
+        </div>
+      `);
+      app.querySelector('#tb-submit').onclick = async () => {
+        const g = app.querySelector('#tb-guess').value;
+        if (!g) return;
+        try { await api('tiebreaker_vote', { name: myName, guess: g }); lastRenderedKey = ''; poll(); }
+        catch (e) { alert('Fejl: ' + (e.error || 'ukendt')); }
+      };
+    }
+
+    function renderPlayerEnded(app) {
+      const podium = computePodium(state.players);
+      setHTML(app, `
+        <div class="player-wrap">
+          <div class="player-title">🏁 SLUT</div>
+          <div class="podium-list">
+            ${podium.map((p, i) => `
+              <div class="podium-row">
+                <span class="podium-medal">${['🥇','🥈','🥉'][i]}</span>
+                <span class="podium-name">${esc(p.name)}</span>
+                <span class="podium-score">${p.score} p</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `);
+    }
+
+    function computePodium(players) {
+      const arr = Object.entries(players).map(([name, p]) => ({
+        name,
+        score: p.score || 0,
+        tbWins: p.tiebreakerWins || 0,
+        avgTime: p.correctCount > 0 ? p.totalAnswerTime / p.correctCount : 999
+      }));
+      arr.sort((a, b) => b.score - a.score || b.tbWins - a.tbWins || a.avgTime - b.avgTime);
+      return arr.slice(0, 3);
+    }
 
     (async () => {
       await fetchQuestions();
