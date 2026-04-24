@@ -2,16 +2,16 @@
   "questions": [
     {
       "id": 1,
-      "category": "historie",
-      "question": "Hvilket år begyndte Meiji-restaurationen, hvor Japan åbnede sig for omverdenen efter over 200 års isolation?",
-      "options": ["1853", "1868", "1889", "1912"],
+      "category": "popkultur",
+      "question": "Hvilket spil er Nintendo Switchs absolut mest solgte spil nogensinde, med over 67 millioner solgte eksemplarer?",
+      "options": ["Animal Crossing: New Horizons", "Mario Kart 8 Deluxe", "Super Smash Bros. Ultimate", "The Legend of Zelda: Breath of the Wild"],
       "correct": 1
     },
     {
       "id": 2,
-      "category": "geografi",
-      "question": "Hvor mange hovedøer består Japan af?",
-      "options": ["3", "4", "5", "7"],
+      "category": "popkultur",
+      "question": "Hvilken af følgende Pokémon var IKKE en af de tre originale starter-Pokémon i Pokémon Rød/Blå (1996)?",
+      "options": ["Bulbasaur", "Pikachu", "Charmander", "Squirtle"],
       "correct": 1
     },
     {
