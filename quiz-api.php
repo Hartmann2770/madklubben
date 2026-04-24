@@ -1,5 +1,5 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 define('STATE_FILE', __DIR__ . '/quiz-state.json');
@@ -13,13 +13,24 @@ function load_state() {
   if (!file_exists(STATE_FILE)) {
     return initial_state();
   }
-  $raw = file_get_contents(STATE_FILE);
+  $fp = fopen(STATE_FILE, 'r');
+  if (!$fp) return initial_state();
+  flock($fp, LOCK_SH);
+  $raw = stream_get_contents($fp);
+  flock($fp, LOCK_UN);
+  fclose($fp);
   $state = json_decode($raw, true);
-  return $state ?: initial_state();
+  if (!is_array($state) || !isset($state['phase'])) {
+    // Corrupt state file: rename for postmortem, return fresh
+    @rename(STATE_FILE, STATE_FILE . '.corrupt.' . time());
+    error_log('quiz-api: STATE_FILE corrupt or missing phase, reset');
+    return initial_state();
+  }
+  return $state;
 }
 
 function save_state($state) {
-  file_put_contents(STATE_FILE, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+  file_put_contents(STATE_FILE, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 }
 
 function load_questions() {
