@@ -110,6 +110,96 @@ switch ($action) {
     respond_state();
     break;
 
+  case 'start_quiz':
+    require_host();
+    $state = load_state();
+    if ($state['phase'] !== 'lobby') {
+      http_response_code(400);
+      echo json_encode(['error' => 'not_in_lobby']);
+      exit;
+    }
+    if (count((array)$state['players']) === 0) {
+      http_response_code(400);
+      echo json_encode(['error' => 'no_players']);
+      exit;
+    }
+    $state['phase'] = 'question';
+    $state['currentQuestionIndex'] = 0;
+    $state['questionShownAt'] = null;
+    $state['votes'] = new stdClass();
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'show_question':
+    require_host();
+    $state = load_state();
+    $state['phase'] = 'question';
+    $state['questionShownAt'] = time();
+    $state['votes'] = new stdClass();
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'close_voting':
+    require_host();
+    $state = load_state();
+    if ($state['phase'] !== 'question') {
+      http_response_code(400);
+      echo json_encode(['error' => 'wrong_phase']);
+      exit;
+    }
+    $state['phase'] = 'voting-closed';
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'show_result':
+    require_host();
+    $state = load_state();
+    $questions = load_questions()['questions'];
+    $q = $questions[$state['currentQuestionIndex']];
+    $correctIndex = $q['correct'];
+
+    // Beregn score: +1 pr. korrekt svar
+    foreach ((array)$state['votes'] as $name => $vote) {
+      if (!isset($state['players'][$name])) continue;
+      $answerTime = $vote['answeredAt'] - $state['questionShownAt'];
+      $state['players'][$name]['totalAnswerTime'] += $answerTime;
+      if ($vote['choice'] === $correctIndex) {
+        $state['players'][$name]['score'] += 1;
+        $state['players'][$name]['correctCount'] += 1;
+      }
+    }
+
+    // Arkiver stemmer
+    $state['votesHistory'][] = [
+      'questionId' => $q['id'],
+      'votes' => $state['votes'],
+    ];
+
+    $state['phase'] = 'result';
+    save_state($state);
+    respond_state();
+    break;
+
+  case 'next_question':
+    require_host();
+    $state = load_state();
+    $questions = load_questions()['questions'];
+    $nextIdx = $state['currentQuestionIndex'] + 1;
+    if ($nextIdx >= count($questions)) {
+      $state['phase'] = 'ended';
+    } else {
+      $state['currentQuestionIndex'] = $nextIdx;
+      $state['phase'] = 'question';
+      $state['questionShownAt'] = null;
+      $state['votes'] = new stdClass();
+    }
+    save_state($state);
+    respond_state();
+    break;
+
   default:
     http_response_code(400);
     echo json_encode(['error' => 'unknown_action']);
