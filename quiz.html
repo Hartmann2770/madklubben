@@ -37,8 +37,8 @@
     .podium-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
     .podium-row:last-child { border-bottom: 0; }
     .podium-medal { font-size: 1.6em; margin-right: 14px; }
-    .podium-name { flex: 1; font-weight: 700; }
-    .podium-score { color: var(--jp-muted); }
+    .podium-name { flex: 1; font-weight: 700; padding-right: 12px; }
+    .podium-score { color: var(--jp-muted); margin-left: auto; white-space: nowrap; }
     .tb-input { width: 100%; padding: 18px; border: 2px solid var(--jp-red); border-radius: 12px; font-size: 1.4em; text-align: center; margin-bottom: 14px; }
     .screen-wrap { max-width: 1400px; margin: 0 auto; padding: 40px 60px; min-height: 100vh; display: flex; flex-direction: column; }
     .screen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: .9em; letter-spacing: .2em; text-transform: uppercase; opacity: .7; }
@@ -78,8 +78,8 @@
     .podium-screen .podium-row:nth-child(2) { border-left-color: silver; font-size: 1.8em; }
     .podium-screen .podium-row:nth-child(3) { border-left-color: #cd7f32; }
     .podium-screen .podium-medal { font-size: 1.4em; margin-right: 20px; }
-    .podium-screen .podium-name { flex: 1; font-weight: 700; }
-    .podium-screen .podium-score { opacity: .7; }
+    .podium-screen .podium-name { flex: 1; font-weight: 700; padding-right: 20px; }
+    .podium-screen .podium-score { opacity: .7; margin-left: auto; white-space: nowrap; }
     .fastest { text-align: center; margin-top: 30px; opacity: .7; font-size: 1.1em; }
     .host-wrap { max-width: 480px; margin: 0 auto; padding: 16px; }
     .host-header { background: var(--jp-dark); color: var(--jp-light); padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; }
@@ -187,8 +187,28 @@
         if (!r.ok) throw new Error('no_archive');
         archive = await r.json();
       } catch {
-        setHTML(app, '<div class="status-msg">Quizzen er ikke arkiveret endnu.</div>');
-        return;
+        // Fallback: byg samme view fra live state hvis arkiv ikke findes endnu
+        try {
+          const liveState = await api('get_state');
+          if (!questions) await fetchQuestions();
+          archive = {
+            dinnerNumber: 67,
+            theme: 'Japan',
+            finishedAt: new Date().toISOString(),
+            players: liveState.players || {},
+            questions: questions.questions,
+            votesHistory: liveState.votesHistory || [],
+            tiebreakerQuestions: questions.tiebreakers,
+            tiebreakerHistory: liveState.tiebreakerHistory || [],
+          };
+          if (Object.keys(archive.players).length === 0) {
+            setHTML(app, '<div class="status-msg">Quizzen er ikke startet endnu.</div>');
+            return;
+          }
+        } catch {
+          setHTML(app, '<div class="status-msg">Kunne ikke indlæse besvarelser.</div>');
+          return;
+        }
       }
 
       const players = archive.players;
@@ -401,6 +421,7 @@
         html += '</div>';
       });
       html += `
+        <a href="/quiz.html?archive=67" target="_blank" rel="noopener" class="host-btn" style="display:block;text-decoration:none;text-align:center;line-height:24px">📋 Vis alle besvarelser</a>
         <button class="host-btn primary" data-action="finish_quiz" data-confirm="Arkiver quizzen permanent? (kan ikke tages tilbage)">💾 Arkiver og afslut</button>
       </div>`;
       return html;

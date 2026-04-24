@@ -30,10 +30,10 @@
     },
     {
       "id": 5,
-      "category": "historie",
-      "question": "Slaget ved Sekigahara i år 1600 sikrede magten for hvilken klan, der herefter regerede Japan i 250 år?",
-      "options": ["Toyotomi", "Oda", "Tokugawa", "Minamoto"],
-      "correct": 2
+      "category": "popkultur",
+      "question": "Hvilket Nintendo-spil fra 1981 introducerede figuren Mario for første gang — dengang under navnet 'Jumpman'?",
+      "options": ["Pac-Man", "Donkey Kong", "Mario Bros.", "Super Mario Bros."],
+      "correct": 1
     },
     {
       "id": 6,
@@ -72,9 +72,9 @@
     },
     {
       "id": 11,
-      "category": "geografi",
-      "question": "Hvilken by er Japans næststørste efter Tokyo, målt på befolkning i selve byen (ikke storbyområdet)?",
-      "options": ["Osaka", "Yokohama", "Nagoya", "Kyoto"],
+      "category": "popkultur",
+      "question": "I hvilken japansk by har Nintendo deres hovedkvarter — som de har haft siden firmaet blev grundlagt i 1889?",
+      "options": ["Tokyo", "Kyoto", "Osaka", "Kobe"],
       "correct": 1
     },
     {
@@ -100,10 +100,10 @@
     },
     {
       "id": 15,
-      "category": "geografi",
-      "question": "Hvor mange tidszoner har Japan?",
-      "options": ["1", "2", "3", "4"],
-      "correct": 0
+      "category": "popkultur",
+      "question": "Den populære Pokémon Eevee er kendt for sine mange udviklingsformer. Hvor mange forskellige Pokémon kan Eevee udvikle sig til på nuværende tidspunkt?",
+      "options": ["3", "5", "8", "12"],
+      "correct": 2
     },
     {
       "id": 16,
@@ -128,9 +128,9 @@
     },
     {
       "id": 19,
-      "category": "natur",
-      "question": "Hvor stor en procentdel af Japans samlede landareal er dækket af skov?",
-      "options": ["Cirka 30%", "Cirka 50%", "Cirka 67%", "Cirka 85%"],
+      "category": "popkultur",
+      "question": "Hvor mange forskellige typer (fx 'ild', 'vand', 'plante') findes der i Pokémon-universet i dag?",
+      "options": ["12", "15", "18", "24"],
       "correct": 2
     },
     {

@@ -125,7 +125,7 @@ switch ($action) {
     }
     $state['phase'] = 'question';
     $state['currentQuestionIndex'] = 0;
-    $state['questionShownAt'] = null;
+    $state['questionShownAt'] = time();
     $state['votes'] = new stdClass();
     save_state($state);
     respond_state();
@@ -193,7 +193,7 @@ switch ($action) {
     } else {
       $state['currentQuestionIndex'] = $nextIdx;
       $state['phase'] = 'question';
-      $state['questionShownAt'] = null;
+      $state['questionShownAt'] = time();
       $state['votes'] = new stdClass();
     }
     save_state($state);
