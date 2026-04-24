@@ -2504,12 +2504,37 @@ function renderDinnerDetail(dinner) {
   const chefs = dinner.chefs.map(c => esc(c)).join(' & ');
   const loc   = dinner.location ? `<span>Hos ${esc(dinner.location)}</span>` : '';
 
+  const quizBtn = num === 67 ? `
+    <div style="margin: 18px 0; text-align: center;">
+      <a href="/quiz.html?role=screen" id="quiz-link-67" target="_blank" rel="noopener"
+         style="display:inline-block;background:#c8102e;color:white;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:700;letter-spacing:.05em;font-size:14px;box-shadow:0 2px 6px rgba(200,16,46,0.25)">
+        🎌 JAPAN-QUIZ
+      </a>
+    </div>` : '';
+
+  // Conditionally swap to archive view if quiz is finished
+  if (num === 67) {
+    setTimeout(() => {
+      fetch('quiz-api.php?action=get_archive', { method: 'GET' })
+        .then(r => {
+          if (!r.ok) return;
+          const link = document.getElementById('quiz-link-67');
+          if (link) {
+            link.href = '/quiz.html?archive=67';
+            link.textContent = '🎌 SE QUIZ-RESULTATER FRA #67';
+          }
+        })
+        .catch(() => {});
+    }, 0);
+  }
+
   return `
     <button class="detail-back-btn" onclick="goBack()">← Tilbage til program</button>
     <div><div class="detail-ornament">Madklub &nbsp;<span style="font-weight:700">N° ${num}</span></div></div>
     <div class="detail-title">${formatLong(dinner.date)}</div>
     <div class="detail-meta"><span>🧑‍🍳 ${chefs}</span>${loc}${dinner.cancelled ? '<span style="color:#8b1818;background:rgba(139,24,24,0.1);border:1px solid rgba(139,24,24,0.35);border-radius:10px;padding:3px 10px;font-size:11px;letter-spacing:0.12em;font-weight:600;text-transform:uppercase;">Aflyst</span>' : ''}</div>
     ${renderAttendees(dinner)}
+    ${quizBtn}
     ${ctaBanner}
     <div class="detail-group-section">
       <div class="detail-section-label">Holdet</div>
