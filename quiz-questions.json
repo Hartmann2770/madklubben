@@ -1,0 +1,176 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "category": "historie",
+      "question": "Hvilket år begyndte Meiji-restaurationen, hvor Japan åbnede sig for omverdenen efter over 200 års isolation?",
+      "options": ["1853", "1868", "1889", "1912"],
+      "correct": 1
+    },
+    {
+      "id": 2,
+      "category": "historie",
+      "question": "Slaget ved Sekigahara i år 1600 sikrede magten for hvilken klan, der herefter regerede Japan i 250 år?",
+      "options": ["Toyotomi", "Oda", "Tokugawa", "Minamoto"],
+      "correct": 2
+    },
+    {
+      "id": 3,
+      "category": "historie",
+      "question": "Hvor mange dage gik der mellem atombomberne over Hiroshima og Nagasaki i august 1945?",
+      "options": ["1 dag", "3 dage", "7 dage", "14 dage"],
+      "correct": 1
+    },
+    {
+      "id": 4,
+      "category": "historie",
+      "question": "Hvilken kejser regerede Japan længst nogensinde (62 år, fra 1926 til 1989)?",
+      "options": ["Meiji", "Taisho", "Hirohito (Showa)", "Akihito"],
+      "correct": 2
+    },
+    {
+      "id": 5,
+      "category": "geografi",
+      "question": "Hvor mange hovedøer består Japan af?",
+      "options": ["3", "4", "5", "7"],
+      "correct": 1
+    },
+    {
+      "id": 6,
+      "category": "geografi",
+      "question": "Hvilken havstrømning bringer varmt tropisk vand op langs Japans østkyst?",
+      "options": ["Oyashio", "Kuroshio", "Humboldt", "Golfstrømmen"],
+      "correct": 1
+    },
+    {
+      "id": 7,
+      "category": "geografi",
+      "question": "Hvor mange tidszoner har Japan?",
+      "options": ["1", "2", "3", "4"],
+      "correct": 0
+    },
+    {
+      "id": 8,
+      "category": "geografi",
+      "question": "Hvilken by er Japans næststørste efter Tokyo, målt på befolkning i selve byen (ikke storbyområdet)?",
+      "options": ["Osaka", "Yokohama", "Nagoya", "Kyoto"],
+      "correct": 1
+    },
+    {
+      "id": 9,
+      "category": "kultur",
+      "question": "En haiku har 17 stavelser fordelt 5-7-5. Hvad hedder den længere klassiske digtform med 31 stavelser fordelt 5-7-5-7-7?",
+      "options": ["Renga", "Tanka", "Senryu", "Choka"],
+      "correct": 1
+    },
+    {
+      "id": 10,
+      "category": "kultur",
+      "question": "Hvad hedder den traditionelle japanske port, der markerer indgangen til en shinto-helligdom?",
+      "options": ["Sanmon", "Karamon", "Torii", "Kasuga"],
+      "correct": 2
+    },
+    {
+      "id": 11,
+      "category": "kultur",
+      "question": "I hvilken japansk teaterform spiller maskerede mænd alle roller, og bevægelserne er ekstremt langsomme og stiliserede?",
+      "options": ["Kabuki", "Noh", "Bunraku", "Kyogen"],
+      "correct": 1
+    },
+    {
+      "id": 12,
+      "category": "kultur",
+      "question": "Hvad hedder den traditionelle japanske kunst at indpakke gaver, madpakker eller andre genstande i et stykke firkantet stof?",
+      "options": ["Origami", "Furoshiki", "Kintsugi", "Ikebana"],
+      "correct": 1
+    },
+    {
+      "id": 13,
+      "category": "mad",
+      "question": "Hvilken type ramen er kendetegnet ved sin tykke, mælkehvide bouillon kogt af svinekno gennem mange timer?",
+      "options": ["Shoyu", "Miso", "Shio", "Tonkotsu"],
+      "correct": 3
+    },
+    {
+      "id": 14,
+      "category": "mad",
+      "question": "Det meste 'wasabi', der serveres til sushi uden for Japan, er faktisk lavet af noget helt andet. Hvad?",
+      "options": ["Sennep", "Peberrod", "Jalapeño", "Koriander"],
+      "correct": 1
+    },
+    {
+      "id": 15,
+      "category": "mad",
+      "question": "Hvilken japansk fisk skal renses af en specielt licenseret kok, fordi den indeholder en dødelig nervegift?",
+      "options": ["Unagi", "Maguro", "Fugu", "Saba"],
+      "correct": 2
+    },
+    {
+      "id": 16,
+      "category": "sprog",
+      "question": "Hvor mange officielle 'joyo kanji' (almindeligt brugte kanji-tegn) er der fastsat i moderne japansk?",
+      "options": ["1006", "2136", "5000", "Over 10.000"],
+      "correct": 1
+    },
+    {
+      "id": 17,
+      "category": "sprog",
+      "question": "Hvad betyder navnet 'Tokyo' (東京) ordret oversat?",
+      "options": ["Den store havn", "Solens by", "Østlig hovedstad", "Den nye kejserby"],
+      "correct": 2
+    },
+    {
+      "id": 18,
+      "category": "popkultur",
+      "question": "Hvilken japansk anime-instruktør står bag film som 'Min nabo Totoro', 'Chihiro og heksene' og 'Prinsesse Mononoke'?",
+      "options": ["Makoto Shinkai", "Hayao Miyazaki", "Mamoru Hosoda", "Satoshi Kon"],
+      "correct": 1
+    },
+    {
+      "id": 19,
+      "category": "popkultur",
+      "question": "Hvilken japansk filminstruktør er kendt for samurai-filmatiseringer af Shakespeare-værker, fx 'Throne of Blood' (Macbeth) og 'Ran' (Kong Lear)?",
+      "options": ["Yasujiro Ozu", "Kenji Mizoguchi", "Akira Kurosawa", "Takashi Miike"],
+      "correct": 2
+    },
+    {
+      "id": 20,
+      "category": "natur",
+      "question": "Hvor stor en procentdel af Japans samlede landareal er dækket af skov?",
+      "options": ["Cirka 30%", "Cirka 50%", "Cirka 67%", "Cirka 85%"],
+      "correct": 2
+    }
+  ],
+  "tiebreakers": [
+    {
+      "id": "tb1",
+      "question": "Hvor mange mennesker boede der i Japan pr. 1. oktober 2024 ifølge Japans Statistikbureau?",
+      "answer": 123940000,
+      "unit": "indbyggere"
+    },
+    {
+      "id": "tb2",
+      "question": "Hvor mange meter højt er Tokyo Skytree (verdens næsthøjeste tårn)?",
+      "answer": 634,
+      "unit": "meter"
+    },
+    {
+      "id": "tb3",
+      "question": "Hvor mange aktive vulkaner findes der i Japan ifølge det japanske meteorologiske institut?",
+      "answer": 111,
+      "unit": "vulkaner"
+    },
+    {
+      "id": "tb4",
+      "question": "Hvor mange kilometer lang er Japans samlede kystlinje?",
+      "answer": 29751,
+      "unit": "kilometer"
+    },
+    {
+      "id": "tb5",
+      "question": "Hvor mange medaljer i alt vandt Japan ved sommer-OL i Tokyo 2020 (afholdt 2021)?",
+      "answer": 58,
+      "unit": "medaljer"
+    }
+  ]
+}
